@@ -1,13 +1,12 @@
 import socket
 import struct
 import time
-from collections import defaultdict
 from package.receiver import MulticastReceiver
 from package.cache import Cache
 from utils import xor
 
-USER_ID = 4  # Or light_id basically
-FILE_ID = 8  # The requested file id
+USER_ID = 1 # For the example
+FILE_ID = 2 # For the example
 MULTICAST_GROUP = '224.3.29.71'
 SERVER_ADDRESS = ('', 10000)
 UNICAST_SERVER_ADDRESS = ('localhost', 10001)
@@ -24,14 +23,21 @@ def main():
     mreq = struct.pack('4sL', group, socket.INADDR_ANY)
     sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
 
-    # Create new receiver object
+    # Create a receiver object
+    print(f"Creating multicast receiver with id={USER_ID} and requesting file {FILE_ID}...")
     receiver = MulticastReceiver(USER_ID, None)
-    # This part could be done inside Receiver object but we do it here for now, more explicit
+
+    # Simulate the cache with received chunks
+    print(f"Creating cache object for user with id={USER_ID} at user_{USER_ID}-file_{FILE_ID}.txt...")
     cache = Cache(f'user_{USER_ID}-file_{FILE_ID}.txt')
+
     # Receive cache data via unicast request
+    print(f"Sending unicast request for cache for user with id={USER_ID} and updating user_{USER_ID}-file_{FILE_ID}.txt...")
     cache_data = receiver.send_unicast_request(UNICAST_SERVER_ADDRESS, FILE_ID)
+
     # Setting cache content
     cache.set_content(cache_data)
+
     # Setting cache to receiver
     receiver.set_cache(cache)
 
@@ -39,42 +45,19 @@ def main():
 
     print(f'Requested fileID: {FILE_ID}')
     print(f"User cache: {receiver.get_cache()}")
-    print(f"User cache type: {type(receiver.get_cache())}")
-
-    packets = []
-    while len(packets) < 10:
+    
+    received_packets = []
+    while len(received_packets) < 10:
         data, _ = sock.recvfrom(1024)
-        packets.append(data)
-    print(f'Received packets: {packets}')
+        received_packets.append(data)
 
-    # Decode packets for user 4
-    requested_fileID = FILE_ID
-    decoded_chunks = {}
-    current_fileID = None
-    current_chunkID = None
+    print(f'Received packets: {received_packets}')
+    
+    ## TO DO ##
+    ## DECODING HERE ##
 
-    for _, packet in enumerate(packets):
-        for _, chunks in receiver.get_cache().items():
-            for chunkID, chunk in chunks.items():
-                    packet = xor(packet, chunk)
-            
-            current_chunkID = chunkID
-            decoded_chunks[current_chunkID] = packet
-
-    print(f"User {receiver.light_id}: ")
-    print(f"\tDecoded chunks: {decoded_chunks}")
-
-    decoded_message = ""
-    indices = list(range(10))  # Assuming indices are 0-9, update as necessary
-    for ind in indices:
-        if ind in decoded_chunks:
-            decoded_message += decoded_chunks[ind].decode('utf-8')
-        elif ind in receiver.get_cache().get(requested_fileID, {}):
-            decoded_message += receiver.get_cache()[requested_fileID][ind].decode('utf-8')
-        else:
-            decoded_message += '?'
-
-    print(f"\tDecoded message: {decoded_message}")
+    
+    
 
 if __name__ == "__main__":
     main()
