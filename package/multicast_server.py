@@ -1,3 +1,5 @@
+import base64
+import json
 import socket
 import struct
 import time
@@ -33,16 +35,16 @@ class MulticastServer:
     
     def generate_transmitted_packets(self):
         list_of_xor_packets = self.session.get_list_of_xor_packets_for_transmission(self.requested_files)
+        print("************************************")
+        print(list_of_xor_packets)
         self.transmitted_packets = []
         for i, xor_packet in enumerate(list_of_xor_packets):
             packet = None
+            packet_obj = {}
             for j, fc in enumerate(xor_packet):
                 try:
-                    print(fc[0])
                     fileID = int(fc[0]) - 1  # Ensure fileID is an integer
-                    print(fileID)
                     chunkID = fc[1]
-                    print(chunkID)
                     chunk = self.chunked_files[self.files[fileID]][chunkID]
                     if j == 0:
                         packet = chunk
@@ -51,14 +53,34 @@ class MulticastServer:
                 except (ValueError, KeyError, TypeError) as e:
                     print(f"Error processing packet: {e}")
                     continue
-            self.transmitted_packets.append(packet)
+            packet_obj["indices"] = xor_packet
+            packet_obj["value"] = packet    
+            self.transmitted_packets.append(packet_obj)
+        self.transmitted_packets[0]["all_indices"] = self.indices
 
+
+    def encode_packet(self, packet):
+        # Custom encoding function to handle bytes
+        def encode_bytes(obj):
+            if isinstance(obj, bytes):
+                return base64.b64encode(obj).decode('utf-8')
+            if isinstance(obj, tuple):
+                return tuple(encode_bytes(item) for item in obj)
+            if isinstance(obj, list):
+                return [encode_bytes(item) for item in obj]
+            if isinstance(obj, dict):
+                return {key: encode_bytes(value) for key, value in obj.items()}
+            return obj
+        
+        return encode_bytes(packet)
 
     def send_packets(self):
         while True:
             for packet in self.transmitted_packets:
                 print(f'Sending packet: {packet}')
-                self.sock.sendto(packet, self.multicast_group)
+                encoded_packet = self.encode_packet(packet)  # Encode the packet
+                packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
+                self.sock.sendto(packet_bytes, self.multicast_group)
                 time.sleep(0.1)
             print("Sending again in 8 seconds...")
             time.sleep(8)
