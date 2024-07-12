@@ -1,6 +1,6 @@
 # Light core
 
-Here are the alogithms for the light core mechanism. 
+Here are the algorithms for the light core mechanism. 
 
 ## Intitiation
 
