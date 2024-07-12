@@ -39,5 +39,6 @@ options:
 
 Example, with user 1 requesting file 2:
 
-```python3 receiver.py 1 -c 2
+```bash
+python3 receiver.py 1 -c 2
 ```

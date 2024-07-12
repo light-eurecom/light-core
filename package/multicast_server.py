@@ -6,7 +6,7 @@ import time
 import threading
 from collections import defaultdict
 from package.multicast_session import MulticastSession
-from utils import xor
+from utils import xor, logger
 
 class MulticastServer:
     def __init__(self, multicast_group, files, receivers, cache_capacity, requested_files):
@@ -57,7 +57,7 @@ class MulticastServer:
                     else:
                         packet = xor(packet, chunk)
                 except (ValueError, KeyError, TypeError) as e:
-                    print(f"Error processing packet: {e}")
+                    logger.error(f"Error processing packet: {e}")
                     continue
             packet_obj["indices"] = xor_packet
             packet_obj["value"] = packet    
@@ -83,12 +83,12 @@ class MulticastServer:
     def send_packets(self):
         while True:
             for packet in self.transmitted_packets:
-                print(f'Sending packet: {packet}')
+                logger.info(f'Sending packet: {packet}')
                 encoded_packet = self.encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
                 self.sock.sendto(packet_bytes, self.multicast_group)
                 time.sleep(0.1)
-            print("Sending again in 8 seconds...")
+            logger.info("Sending again in 8 seconds...")
             time.sleep(8)
     
     def update_requests(self, unicast_server):
