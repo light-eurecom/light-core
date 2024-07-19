@@ -25,10 +25,26 @@ class MulticastServer:
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
         
     def split_chunks(self):
-        splitted = {
-        f: {ind: bytes(f[i % len(f)], 'utf-8') for i, ind in enumerate(self.indices)} 
-        for f in self.files
-    }
+        '''
+        TODO: this works only in the files are (i) strings and (ii) of equal length and (iii) chunk size is not integer. We will need to generalize.
+        '''
+        
+        if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
+            raise Exception('At least one file is not of string type')
+        if len(set([len(f) for f in self.files])) > 1 :
+            raise Exception('Files are not of the same size')
+        if not (len(self.files[0])/len(self.indices)).is_integer() :
+            raise Exception('Chunk size is not integer')
+        chunk_size = int(len(self.files[0])/len(self.indices))
+
+        splitted = dict()
+        for f in self.files:
+            splitted[f] = {ind: bytes(f[i*chunk_size : (i+1)*chunk_size], 'utf-8') for i,ind in enumerate(self.indices)}
+
+    #     splitted = {
+    #     f: {ind: bytes(f[i % len(f)], 'utf-8') for i, ind in enumerate(self.indices)} 
+    #     for f in self.files
+    # }
         return splitted
 
     def update_cache_with_files(self):
