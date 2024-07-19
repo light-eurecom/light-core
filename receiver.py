@@ -92,13 +92,13 @@ def main(args):
     time.sleep(1)  # Give the server some time to process the request
     
     received_packets = []
-    while len(received_packets) < 10:
+    while len(received_packets) < 10: ## @TODO@ : this is hard coded. Needs to change to handle generic lenghts (e.g., the server could send sth like "last message", similarly to the initial demo we've implemented)
         data, _ = sock.recvfrom(1024)
         packet = data.decode('utf-8')
         decoded_packet = decode_packet(packet)
         received_packets.append(decoded_packet)
         
-
+    ## @@TODO@@ the following functionality up to line 127, should be implemented in a method. In fact it decodes and puts in order the packets of the file
     list_of_xor_packets = get_list_of_xor_packets(received_packets)
     transmitted_packets = get_list_of_transmitted_packets(received_packets)
     indices = received_packets[0]["all_indices"]
