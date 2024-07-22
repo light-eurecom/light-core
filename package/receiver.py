@@ -88,7 +88,7 @@ class MulticastReceiver:
     
     def start(self, file_id):
         received_packets = []
-        while True: ## @TODO@ : this is hard coded. Needs to change to handle generic lenghts (e.g., the server could send sth like "last message", similarly to the initial demo we've implemented)
+        while True: 
             data, _ = self.sock.recvfrom(1024)
             packet = data.decode('utf-8')
             if packet == "LAST_PACKET":
@@ -97,11 +97,9 @@ class MulticastReceiver:
             received_packets.append(decoded_packet)
             
             
-        ## @@TODO@@ the following functionality up to line 127, should be implemented in a method. In fact it decodes and puts in order the packets of the file
         list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
         transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
         indices = received_packets[0]["all_indices"]
-        # print(f"indices : {indices}")
         decoded_chunks = {}
         current_fileID = None
         current_chunkID = None
