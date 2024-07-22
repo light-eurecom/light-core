@@ -104,6 +104,8 @@ class MulticastServer:
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
                 self.sock.sendto(packet_bytes, self.multicast_group)
                 time.sleep(0.1)
+            logger.info(f'Sending last packet...')
+            self.sock.sendto(b"LAST_PACKET", self.multicast_group)
             logger.info("Sending again in 8 seconds...")
             time.sleep(8)
     
