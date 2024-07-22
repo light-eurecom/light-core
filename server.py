@@ -1,12 +1,10 @@
 import threading
-from collections import defaultdict
 from package.multicast_server import MulticastServer
 from package.unicast_server import UnicastServer
 from utils import xor, logger
 
 def main():
-    # files = ['alleviated', 'adulterate', 'bookkeeper', 'chromosome', 'calculated', 'determined', 'excavation', 'formidable', 'graciously', 'hypnotized']
-    files = ['all', 'adul', 'boo', 'chr', 'cal', 'det', 'exc', 'for', 'gra', 'hyp']
+    files = ['alleviated', 'adulterate', 'bookkeeper', 'chromosome', 'calculated', 'determined', 'excavation', 'formidable', 'graciously', 'hypnotized']
     receivers = ['paul', 'anto', 'jony', 'elio', 'rony']
     logger.info(files)
     multicast_group = ('224.3.29.71', 10000)
