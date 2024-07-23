@@ -1,5 +1,6 @@
 import base64
 import json
+import os
 import socket
 import struct
 import time
@@ -41,11 +42,47 @@ class MulticastServer:
         for f in self.files:
             splitted[f] = {ind: bytes(f[i*chunk_size : (i+1)*chunk_size], 'utf-8') for i,ind in enumerate(self.indices)}
 
-    #     splitted = {
-    #     f: {ind: bytes(f[i % len(f)], 'utf-8') for i, ind in enumerate(self.indices)} 
-    #     for f in self.files
-    # }
         return splitted
+    
+    def split_chunks_V2(self):
+        '''
+        TODO: this works only in the files are (i) strings and (ii) of equal length and (iii) chunk size is not integer. We will need to generalize.
+        '''
+        
+        if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
+            raise Exception('At least one file is not of string type')
+        if len(set([len(f) for f in self.files])) > 1 :
+            raise Exception('Files are not of the same size')
+        if not (len(self.files[0])/len(self.indices)).is_integer() :
+            raise Exception('Chunk size is not integer')
+        chunk_size = int(len(self.files[0])/len(self.indices))
+
+        splitted = dict()
+        for f in self.files:
+            splitted[f] = {ind: self.split_video(f) for i,ind in enumerate(self.indices)}
+
+        return splitted
+    
+    def split_video(self, file_path):
+        """Split the video into n equal-sized chunks."""
+        try:
+            video = open(file_path, 'rb')
+            video_size = os.path.getsize(file_path)
+            chunk_size = int(len(video_size)/len(self.indices))
+
+            # Read and return video chunks
+            chunks = []
+            for _ in range(self.indices):
+                chunk = video.read(chunk_size)
+                chunks.append(chunk)
+
+            video.close()
+
+            return chunks
+
+        except Exception as e:
+            print("[Error] Unable to split video:", str(e))
+            return None
 
     def update_cache_with_files(self):
         for user in range(1, self.session.nb_receivers + 1):

@@ -95,8 +95,7 @@ class MulticastReceiver:
                 break
             decoded_packet = self.decode_packet(packet)
             received_packets.append(decoded_packet)
-            
-            
+             
         list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
         transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
         indices = received_packets[0]["all_indices"]
