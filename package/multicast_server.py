@@ -32,10 +32,10 @@ class MulticastServer:
         
         if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
             raise Exception('At least one file is not of string type')
-        if len(set([len(f) for f in self.files])) > 1 :
-            raise Exception('Files are not of the same size')
-        if not (len(self.files[0])/len(self.indices)).is_integer() :
-            raise Exception('Chunk size is not integer')
+        # if len(set([len(f) for f in self.files])) > 1 :
+        #     raise Exception('Files are not of the same size')
+        # if not (len(self.files[0])/len(self.indices)).is_integer() :
+        #     raise Exception('Chunk size is not integer')
         chunk_size = int(len(self.files[0])/len(self.indices))
 
         splitted = dict()
@@ -66,6 +66,7 @@ class MulticastServer:
     def split_video(self, file_path):
         """Split the video into n equal-sized chunks."""
         try:
+            print(file_path)
             video = open(file_path, 'rb')
             video_size = os.path.getsize(file_path)
             chunk_size = int(len(video_size)/len(self.indices))
