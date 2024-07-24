@@ -7,17 +7,19 @@ import time
 import threading
 from collections import defaultdict
 from package.multicast_session import MulticastSession
-from utils import xor, logger
+from utils import xor, logger, compress_chunk
+
 
 class MulticastServer:
     def __init__(self, multicast_group, files, receivers, cache_capacity, requested_files):
         self.multicast_group = multicast_group
         self.files = files
         self.receivers = receivers
-        self.session = MulticastSession(librairy=files, receivers=receivers, cache_capacity=cache_capacity)
+        self.session = MulticastSession(library=files, receivers=receivers, cache_capacity=cache_capacity)
+        # self.session.format_videos()
         self.indices = self.session.get_chunks_indices()
         self.caches = self.session.get_indices_per_user_cache(self.indices)
-        self.chunked_files = self.split_chunks()
+        self.chunked_files = self.split_chunks_videos()
         self.caches_with_files = defaultdict(dict)
         self.transmitted_packets = []
         self.requested_files = requested_files
@@ -32,25 +34,6 @@ class MulticastServer:
         
         if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
             raise Exception('At least one file is not of string type')
-        # if len(set([len(f) for f in self.files])) > 1 :
-        #     raise Exception('Files are not of the same size')
-        # if not (len(self.files[0])/len(self.indices)).is_integer() :
-        #     raise Exception('Chunk size is not integer')
-        chunk_size = int(len(self.files[0])/len(self.indices))
-
-        splitted = dict()
-        for f in self.files:
-            splitted[f] = {ind: bytes(f[i*chunk_size : (i+1)*chunk_size], 'utf-8') for i,ind in enumerate(self.indices)}
-
-        return splitted
-    
-    def split_chunks_V2(self):
-        '''
-        TODO: this works only in the files are (i) strings and (ii) of equal length and (iii) chunk size is not integer. We will need to generalize.
-        '''
-        
-        if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
-            raise Exception('At least one file is not of string type')
         if len(set([len(f) for f in self.files])) > 1 :
             raise Exception('Files are not of the same size')
         if not (len(self.files[0])/len(self.indices)).is_integer() :
@@ -59,28 +42,34 @@ class MulticastServer:
 
         splitted = dict()
         for f in self.files:
-            splitted[f] = {ind: self.split_video(f) for i,ind in enumerate(self.indices)}
+            splitted[f] = {ind: bytes(f[i*chunk_size : (i+1)*chunk_size], 'utf-8') for i,ind in enumerate(self.indices)}
 
+        return splitted
+    
+    def split_chunks_videos(self):
+        '''
+        '''
+
+        splitted = dict()
+        for f in self.files:
+            splitted[f["id"]] = {ind: self.split_video(f["compressed_path"]) for i,ind in enumerate(self.indices)}
         return splitted
     
     def split_video(self, file_path):
         """Split the video into n equal-sized chunks."""
         try:
-            print(file_path)
-            video = open(file_path, 'rb')
+            video = open(file_path, 'rb')    
             video_size = os.path.getsize(file_path)
-            chunk_size = int(len(video_size)/len(self.indices))
+            chunk_size = int(video_size/len(self.indices))
 
             # Read and return video chunks
             chunks = []
-            for _ in range(self.indices):
+            for _ in self.indices:
                 chunk = video.read(chunk_size)
-                chunks.append(chunk)
-
+                chunks.append(compress_chunk(chunk))
             video.close()
-
             return chunks
-
+        
         except Exception as e:
             print("[Error] Unable to split video:", str(e))
             return None
@@ -89,14 +78,13 @@ class MulticastServer:
         for user in range(1, self.session.nb_receivers + 1):
             for i, f in enumerate(self.files):
                 fileID = i + 1
-                self.caches_with_files[user][fileID] = {k: v for k, v in self.chunked_files[f].items() if k in self.caches[user]}
+                self.caches_with_files[user][fileID] = {k: v for k, v in self.chunked_files[f["id"]].items() if k in self.caches[user]}
     
     def get_users_cache(self):
         return self.caches_with_files
     
     def generate_transmitted_packets(self):
         list_of_xor_packets = self.session.get_list_of_xor_packets_for_transmission(self.requested_files)
-        print(list_of_xor_packets)
         self.transmitted_packets = []
         for i, xor_packet in enumerate(list_of_xor_packets):
             packet = None
