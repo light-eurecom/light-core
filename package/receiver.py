@@ -4,8 +4,7 @@ import socket
 import struct
 from utils import xor, logger
 
-
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 1024 * 1024  # 1 MB buffer size
 MULTICAST_GROUP = '224.3.29.71'
 SERVER_ADDRESS = ('', 10000)
 UNICAST_SERVER_ADDRESS = ('localhost', 10001)
@@ -41,19 +40,26 @@ class MulticastReceiver:
         request_message = f"{self.light_id},{requested_fileID}"
         unicast_sock.sendall(request_message.encode('utf-8'))
         
-        response = unicast_sock.recv(BUFFER_SIZE)
-        cache_data = str(response.decode('utf-8'))
+        cache = []
+        i = 1
+        while i <= 9072:
+            data = unicast_sock.recv(BUFFER_SIZE)
+            if data == b'LAST_PACKET':
+                break
+            cache.append(data)
+            i += 1
         unicast_sock.close()
-        return cache_data
+        return cache
     
     def decode_packet(self, packet):
-        # Custom decoding function to handle base64 encoded strings
         def decode_bytes(obj):
             if isinstance(obj, str):
                 try:
                     return base64.b64decode(obj)
                 except Exception:
-                    return obj  # Return the string if it's not a base64 encoded bytes object
+                    return obj
+            if isinstance(obj, bytes):
+                return obj
             if isinstance(obj, tuple):
                 return tuple(decode_bytes(item) for item in obj)
             if isinstance(obj, list):
@@ -62,11 +68,18 @@ class MulticastReceiver:
                 return {key: decode_bytes(value) for key, value in obj.items()}
             return obj
         
-        return decode_bytes(json.loads(packet))
+        try:
+            if isinstance(packet, (str, bytes)):
+                packet = json.loads(packet)
+            return decode_bytes(packet)
+        except Exception as e:
+            logger.error(e)
     
     def get_list_of_xor_packets(self, packets):
         extracted_indices = []
+        
         for packet in packets:
+            packet = self.decode_packet(packet)
             indices = packet['indices']
             formatted_indices = [(index, tuple(subindex)) for index, subindex in indices]
             extracted_indices.append(formatted_indices)
@@ -86,16 +99,41 @@ class MulticastReceiver:
                 return True
         return False
     
+    def save_video_file(self, file_path, data):
+        """Save the video file."""
+        with open(file_path, "wb") as file:
+            file.write(data)
+    
     def start(self, file_id):
         received_packets = []
-        while True: 
+        chunk = []
+        while True:
             data, _ = self.sock.recvfrom(1024)
-            packet = data.decode('utf-8')
-            if packet == "LAST_PACKET":
+            if data == b"END_OF_CHUNK":
+                received_packets.append(self.decode_packet(b''.join(chunk)))
+                chunk = []
+            elif data == b"LAST_PACKET":
                 break
-            decoded_packet = self.decode_packet(packet)
-            received_packets.append(decoded_packet)
-             
+            else:
+                chunk.append(data)
+                
+        # Convert received packets to base64 strings for JSON serialization
+        def encode_bytes(obj):
+            if isinstance(obj, bytes):
+                return base64.b64encode(obj).decode('utf-8')
+            if isinstance(obj, tuple):
+                return tuple(encode_bytes(item) for item in obj)
+            if isinstance(obj, list):
+                return [encode_bytes(item) for item in obj]
+            if isinstance(obj, dict):
+                return {key: encode_bytes(value) for key, value in obj.items()}
+            return obj
+        
+        serialized_packets = encode_bytes(received_packets)
+        
+        with open("received_packets.json", 'w') as file:
+            json.dump(serialized_packets, file)    
+            
         list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
         transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
         indices = received_packets[0]["all_indices"]
@@ -115,16 +153,17 @@ class MulticastReceiver:
             if current_fileID == file_id:
                 decoded_chunks[current_chunkID] = packet
 
-        decoded_message = ""
+        decoded_message = b""
         for ind in indices:
             if tuple(ind) in decoded_chunks:
-                decoded_message += decoded_chunks[tuple(ind)].decode('utf-8')
+                decoded_message += decoded_chunks[tuple(ind)]
             else:
-                decoded_message += self.get_cache()[file_id][tuple(ind)].decode('utf-8')
+                decoded_message += self.get_cache()[file_id][tuple(ind)]
 
+        # Save the decoded message as a video file
+        file_path = "doesitworkornot.mp4"
+        self.save_video_file(file_path, decoded_message)
+        logger.info(f"Successfully decoded and saved as: {file_path}")
 
-        # Print the decoded message
-        logger.info(f"Decoded message for user {self.light_id}, file {file_id}:")
-        logger.success(decoded_message)
-
-
+        # Log the success message
+        logger.success("Video file has been successfully saved.")

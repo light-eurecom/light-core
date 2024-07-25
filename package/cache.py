@@ -33,6 +33,6 @@ class Cache:
     def set_content(self, content):
         try:
             with open(self.filename, 'w') as file:
-                file.write(content)
+                file.write(str(content))
         except Exception as e:
             print(f"Error writing to {self.filename}: {e}")

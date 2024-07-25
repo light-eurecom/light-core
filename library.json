@@ -3,52 +3,52 @@
         {
             "id": 1,
             "path": "./raw_videos/video1.mp4",
-            "compressed_path": "./compressed_videos/1.mp4"
+            "compressed_path": "./raw_videos/video1.mp4"
         },
         {
             "id": 2,
             "path": "./raw_videos/video2.mp4",
-            "compressed_path": "./compressed_videos/2.mp4"
+            "compressed_path": "./raw_videos/video2.mp4"
         },
         {
             "id": 3,
             "path": "./raw_videos/video3.mp4",
-            "compressed_path": "./compressed_videos/3.mp4"
+            "compressed_path": "./raw_videos/video3.mp4"
         },
         {
             "id": 4,
             "path": "./raw_videos/video4.mp4",
-            "compressed_path": "./compressed_videos/4.mp4"
+            "compressed_path": "./raw_videos/video4.mp4"
         },
         {
             "id": 5,
             "path": "./raw_videos/video5.mp4",
-            "compressed_path": "./compressed_videos/5.mp4"
+            "compressed_path": "./raw_videos/video5.mp4"
         },
         {
             "id": 6,
             "path": "./raw_videos/video6.mp4",
-            "compressed_path": "./compressed_videos/6.mp4"
+            "compressed_path": "./raw_videos/video6.mp4"
         },
         {
             "id": 7,
             "path": "./raw_videos/video7.mp4",
-            "compressed_path": "./compressed_videos/7.mp4"
+            "compressed_path": "./raw_videos/video7.mp4"
         },
         {
             "id": 8,
             "path": "./raw_videos/video8.mp4",
-            "compressed_path": "./compressed_videos/8.mp4"
+            "compressed_path": "./raw_videos/video8.mp4"
         },
         {
             "id": 9,
             "path": "./raw_videos/video9.mp4",
-            "compressed_path": "./compressed_videos/9.mp4"
+            "compressed_path": "./raw_videos/video9.mp4"
         },
         {
             "id": 10,
             "path": "./raw_videos/video10.mp4",
-            "compressed_path": "./compressed_videos/10.mp4"
+            "compressed_path": "./raw_videos/video10.mp4"
         }
     ]
 }
