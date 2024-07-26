@@ -1,4 +1,3 @@
-import base64
 import json
 import os
 import socket
@@ -7,7 +6,7 @@ import time
 import threading
 from collections import defaultdict
 from package.multicast_session import MulticastSession
-from utils import split_into_chunks, xor, logger
+from utils import encode_packet, split_into_chunks, xor, logger
 
 BUFFER_SIZE = 2048  # 1 MB buffer size
 
@@ -69,8 +68,6 @@ class MulticastServer:
             chunks = []
             for _ in self.indices:
                 chunk = video.read(chunk_size)
-                logger.info("compressing chunk...")
-                # compress_chunked = compress_chunk(chunk)
                 chunks.append(chunk)
             video.close()
             return chunks
@@ -113,25 +110,10 @@ class MulticastServer:
         self.transmitted_packets[0]["all_indices"] = self.indices
 
 
-    def encode_packet(self, packet):
-        # Custom encoding function to handle bytes
-        def encode_bytes(obj):
-            if isinstance(obj, bytes):
-                return base64.b64encode(obj).decode('utf-8')
-            if isinstance(obj, tuple):
-                return tuple(encode_bytes(item) for item in obj)
-            if isinstance(obj, list):
-                return [encode_bytes(item) for item in obj]
-            if isinstance(obj, dict):
-                return {key: encode_bytes(value) for key, value in obj.items()}
-            return obj
-        
-        return encode_bytes(packet)
-
     def send_packets(self):
         while True:
             for packet in self.transmitted_packets:
-                encoded_packet = self.encode_packet(packet)  # Encode the packet
+                encoded_packet = encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
                 chunked_packets = split_into_chunks(packet_bytes, BUFFER_SIZE, last_packet=b"END_OF_CHUNK")
 

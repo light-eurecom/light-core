@@ -46,13 +46,13 @@ def main():
     requested_files = dict({1: 2, 2: 5, 3: 6, 4: 8, 5: 9})
     cache_capacity = 4
     
-    if not folder_exists(FORMATTED_VIDEOS_FOLDER) or is_folder_empty(FORMATTED_VIDEOS_FOLDER):
-        logger.info("Videos not formatted yet, formatting...")
-        os.makedirs(FORMATTED_VIDEOS_FOLDER, exist_ok=True)
-        video_formatter = VideoFormatter(files)
-        video_formatter.format_videos()
-    else:
-        logger.info("Videos already formatted, skipping...")
+    # if not folder_exists(FORMATTED_VIDEOS_FOLDER) or is_folder_empty(FORMATTED_VIDEOS_FOLDER):
+    #     logger.info("Videos not formatted yet, formatting...")
+    #     os.makedirs(FORMATTED_VIDEOS_FOLDER, exist_ok=True)
+    #     video_formatter = VideoFormatter(files)
+    #     video_formatter.format_videos()
+    # else:
+    #     logger.info("Videos already formatted, skipping...")
 
     multicast_server = MulticastServer(MULTICAST_GROUP, files, receivers, cache_capacity, requested_files)
     unicast_server = UnicastServer(users_cache=multicast_server.get_users_cache())

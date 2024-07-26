@@ -2,9 +2,9 @@ import base64
 import json
 import socket
 import struct
-from utils import xor, logger
+from utils import xor, logger, decode_packet
 
-BUFFER_SIZE = 1024 * 1024  # 1 MB buffer size
+BUFFER_SIZE = 2048
 MULTICAST_GROUP = '224.3.29.71'
 SERVER_ADDRESS = ('', 10000)
 UNICAST_SERVER_ADDRESS = ('localhost', 10001)
@@ -41,45 +41,27 @@ class MulticastReceiver:
         unicast_sock.sendall(request_message.encode('utf-8'))
         
         cache = []
-        i = 1
-        while i <= 9072:
+        while True:
             data = unicast_sock.recv(BUFFER_SIZE)
-            if data == b'LAST_PACKET':
+            if b'LAST_PACKET' in data:
+                parts = data.split(b'LAST_PACKET', 1)
+                if parts[0]:
+                    cache.append(parts[0])
+                logger.info("Received LAST_PACKET")
                 break
             cache.append(data)
-            i += 1
-        unicast_sock.close()
-        return cache
-    
-    def decode_packet(self, packet):
-        def decode_bytes(obj):
-            if isinstance(obj, str):
-                try:
-                    return base64.b64decode(obj)
-                except Exception:
-                    return obj
-            if isinstance(obj, bytes):
-                return obj
-            if isinstance(obj, tuple):
-                return tuple(decode_bytes(item) for item in obj)
-            if isinstance(obj, list):
-                return [decode_bytes(item) for item in obj]
-            if isinstance(obj, dict):
-                return {key: decode_bytes(value) for key, value in obj.items()}
-            return obj
         
-        try:
-            if isinstance(packet, (str, bytes)):
-                packet = json.loads(packet)
-            return decode_bytes(packet)
-        except Exception as e:
-            logger.error(e)
-    
+        unicast_sock.close()
+        
+        joined_bytes = b''.join(cache)  # Combine all byte sequences into one
+        return  decode_packet(joined_bytes)  # Decode bytes to string
+        
+        
     def get_list_of_xor_packets(self, packets):
         extracted_indices = []
         
         for packet in packets:
-            packet = self.decode_packet(packet)
+            packet = decode_packet(packet)
             indices = packet['indices']
             formatted_indices = [(index, tuple(subindex)) for index, subindex in indices]
             extracted_indices.append(formatted_indices)
@@ -110,29 +92,12 @@ class MulticastReceiver:
         while True:
             data, _ = self.sock.recvfrom(1024)
             if data == b"END_OF_CHUNK":
-                received_packets.append(self.decode_packet(b''.join(chunk)))
+                received_packets.append(decode_packet(b''.join(chunk)))
                 chunk = []
             elif data == b"LAST_PACKET":
                 break
             else:
                 chunk.append(data)
-                
-        # Convert received packets to base64 strings for JSON serialization
-        def encode_bytes(obj):
-            if isinstance(obj, bytes):
-                return base64.b64encode(obj).decode('utf-8')
-            if isinstance(obj, tuple):
-                return tuple(encode_bytes(item) for item in obj)
-            if isinstance(obj, list):
-                return [encode_bytes(item) for item in obj]
-            if isinstance(obj, dict):
-                return {key: encode_bytes(value) for key, value in obj.items()}
-            return obj
-        
-        serialized_packets = encode_bytes(received_packets)
-        
-        with open("received_packets.json", 'w') as file:
-            json.dump(serialized_packets, file)    
             
         list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
         transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
@@ -161,7 +126,7 @@ class MulticastReceiver:
                 decoded_message += self.get_cache()[file_id][tuple(ind)]
 
         # Save the decoded message as a video file
-        file_path = "doesitworkornot.mp4"
+        file_path = f"server{self.light_id}-video_{file_id}.mp4"
         self.save_video_file(file_path, decoded_message)
         logger.info(f"Successfully decoded and saved as: {file_path}")
 
