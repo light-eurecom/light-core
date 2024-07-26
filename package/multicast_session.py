@@ -1,17 +1,16 @@
-
 from itertools import combinations
 
 class MulticastSession:
-    def __init__(self, librairy, receivers, cache_capacity):
-        self.librairy = librairy
+    def __init__(self, library, receivers, cache_capacity):
+        self.library = library
         self.receivers = receivers
         self.nb_receivers = len(receivers)
-        self.nb_items = len(librairy)
+        self.nb_items = len(library)
         self.cache_capacity = cache_capacity
         self.t = None
-        
-    def get_librairy(self):
-        return self.librairy
+
+    def get_library(self):
+        return self.library
     
     def check_parameters(self):
         '''
@@ -31,7 +30,6 @@ class MulticastSession:
         else:
             return False
 
-
     def get_chunks_indices(self):
         '''
         Calculates in how many chunks each file needs to be split, and generates the "indices" (i.e., a list of tuples) for the chunks
@@ -45,14 +43,14 @@ class MulticastSession:
                     the size of the list (i.e., number of indices) is equal to the number of chunks that the files needs to be split 
         '''
         if self.check_parameters():
-            indices = list(combinations(range(1,self.nb_receivers+1), self.t))
+            indices = list(combinations(range(1, self.nb_receivers + 1), self.t))
         else:
-            error_message = "t=K*M/N={} is not an integer, choose other parameters, e.g., M={}".format(self.nb_receivers*self.cache_capacity/self.nb_items, int(int(self.nb_receivers*self.cache_capacity/self.nb_items)*self.nb_items/self.nb_receivers))
+            error_message = "t=K*M/N={} is not an integer, choose other parameters, e.g., M={}".format(self.nb_receivers * self.cache_capacity / self.nb_items, int(int(self.nb_receivers * self.cache_capacity / self.nb_items) * self.nb_items / self.nb_receivers))
             raise Exception(error_message)
 
         return indices
 
-    def get_indices_per_user_cache(self,indices):
+    def get_indices_per_user_cache(self, indices):
         '''
         Calculates the list of indices (i.e., which chunks) that each user cache should contain
         
@@ -61,15 +59,13 @@ class MulticastSession:
 
         :return:	(dict) a dictionary with keys the user ID (from 1 to K) and values a list of indices (subset of the given list of indices)
         '''
-        ### calculate indices of caches
         caches = {}
-        for i in range(1,self.nb_receivers+1):
+        for i in range(1, self.nb_receivers + 1):
             caches[i] = [ind for ind in indices if i in ind]
 
         return caches
-
-
-    def get_list_of_xor_packets_for_transmission(self,requested_files):
+    
+    def get_list_of_xor_packets_for_transmission(self, requested_files):
         '''
         Calculates the packets that the transmitter has to do to serve the given list of requests, 
         and the XOR operations that are needed for each packet 
@@ -87,16 +83,17 @@ class MulticastSession:
         '''
         list_of_xor_packets = []
         requesting_users = list(requested_files.keys())
-        all_users = list(range(1,self.nb_receivers+1))
-        list_of_xor_combinations = list(combinations(all_users,self.t+1))
+        all_users = list(range(1, self.nb_receivers + 1))
+        list_of_xor_combinations = list(combinations(all_users, self.t + 1))
         for xor_combination in list_of_xor_combinations:
             chunks_to_xor = []
             for user in xor_combination:
                 if user in requesting_users:
                     file = requested_files[user]
                     chunk = tuple([i for i in xor_combination if i != user])
-                    chunks_to_xor.append((file,chunk))
+                    chunks_to_xor.append((file, chunk))
                 else:
-                    chunks_to_xor.append(('na','na'))
+                    chunks_to_xor.append(('na', 'na'))
             list_of_xor_packets.append(chunks_to_xor)
         return list_of_xor_packets
+    

@@ -9,7 +9,7 @@ def main(args):
     FILE_ID = args.content
 
     receiver = MulticastReceiver(USER_ID, None)
-    cache_file = f'server{USER_ID}-file_{FILE_ID}.txt'
+    cache_file = f'server{USER_ID}-file_{FILE_ID}-test.txt'
     cache = Cache(cache_file)
     
     cache_data = receiver.send_unicast_request(FILE_ID)

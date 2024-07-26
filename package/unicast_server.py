@@ -1,8 +1,11 @@
+import json
 import socket
 import time
 import threading
 from collections import defaultdict
-from utils import logger
+from utils import logger, split_into_chunks, encode_packet
+
+CHUNK_SIZE = 2048
 
 class UnicastServer:
     def __init__(self, users_cache, host='localhost', port=10001):
@@ -18,11 +21,17 @@ class UnicastServer:
         request = client_socket.recv(1024).decode('utf-8')
         user_id, file_id = map(int, request.split(','))
         self.requests[user_id].append(file_id)
-        response = str(self.users_cache[user_id])
-        logger.info(f"Sending cache data to user {user_id}: {response}")
-        logger.info("waiting 2s...")
         time.sleep(2)
-        client_socket.sendall(response.encode('utf-8'))
+        
+        encoded_cache = encode_packet(self.users_cache[user_id])
+        cache = json.dumps(encoded_cache).encode('utf-8')
+                
+        data = split_into_chunks(cache, CHUNK_SIZE)
+        logger.info("sending cache packets to receiver...")
+        for d in data:
+            client_socket.sendall(d)
+            if(d == b'LAST_PACKET'):
+                logger.success(f"Send cache to {user_id}.")
         client_socket.close()
 
     def start(self):
