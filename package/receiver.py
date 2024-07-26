@@ -5,7 +5,7 @@ import struct
 from utils import xor, logger, decode_packet
 
 BUFFER_SIZE = 2048
-MULTICAST_GROUP = '224.3.29.71'
+MULTICAST_GROUP = '224.0.0.1'
 SERVER_ADDRESS = ('', 10000)
 UNICAST_SERVER_ADDRESS = ('localhost', 10001)
 

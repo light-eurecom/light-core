@@ -6,7 +6,7 @@ from package.unicast_server import UnicastServer
 from package.video_formatter import VideoFormatter
 from utils import logger
 
-MULTICAST_GROUP = ('224.3.29.71', 10000)
+MULTICAST_GROUP = ('224.0.0.1', 10000)
 LIBRARY_FILE = 'library.json'
 FORMATTED_VIDEOS_FOLDER = "./compressed_videos"
 
