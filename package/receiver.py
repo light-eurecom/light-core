@@ -7,7 +7,7 @@ from utils import xor, logger, decode_packet
 BUFFER_SIZE = 2048
 MULTICAST_GROUP = '224.0.0.1'
 SERVER_ADDRESS = ('', 10000)
-UNICAST_SERVER_ADDRESS = ('localhost', 10001)
+UNICAST_SERVER_ADDRESS = ('192.168.1.10', 10001)
 
 class MulticastReceiver:
     def __init__(self, light_id, cache=None):
@@ -35,26 +35,31 @@ class MulticastReceiver:
         self.cache = cache
     
     def send_unicast_request(self, requested_fileID):
-        unicast_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        unicast_sock.connect(UNICAST_SERVER_ADDRESS)
-        request_message = f"{self.light_id},{requested_fileID}"
-        unicast_sock.sendall(request_message.encode('utf-8'))
         
-        cache = []
-        while True:
-            data = unicast_sock.recv(BUFFER_SIZE)
-            if b'LAST_PACKET' in data:
-                parts = data.split(b'LAST_PACKET', 1)
-                if parts[0]:
-                    cache.append(parts[0])
-                logger.info("Received LAST_PACKET")
-                break
-            cache.append(data)
-        
-        unicast_sock.close()
-        
-        joined_bytes = b''.join(cache)  # Combine all byte sequences into one
-        return  decode_packet(joined_bytes)  # Decode bytes to string
+        try:
+            unicast_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            unicast_sock.connect(UNICAST_SERVER_ADDRESS)
+            request_message = f"{self.light_id},{requested_fileID}"
+            unicast_sock.sendall(request_message.encode('utf-8'))
+            
+            cache = []
+            while True:
+                data = unicast_sock.recv(BUFFER_SIZE)
+                if b'LAST_PACKET' in data:
+                    parts = data.split(b'LAST_PACKET', 1)
+                    if parts[0]:
+                        cache.append(parts[0])
+                    logger.info("Received LAST_PACKET")
+                    break
+                cache.append(data)
+            
+            unicast_sock.close()
+            
+            joined_bytes = b''.join(cache)  # Combine all byte sequences into one
+            return  decode_packet(joined_bytes)  # Decode bytes to string
+        except Exception as e:
+            logger.error("Unicast server seems down. Exiting.")
+            exit()
         
         
     def get_list_of_xor_packets(self, packets):

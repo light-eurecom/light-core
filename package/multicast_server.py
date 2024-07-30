@@ -11,12 +11,11 @@ from utils import encode_packet, split_into_chunks, xor, logger
 BUFFER_SIZE = 2048  # 1 MB buffer size
 
 class MulticastServer:
-    def __init__(self, multicast_group, files, receivers, cache_capacity, requested_files):
+    def __init__(self, multicast_group, files, receivers, cache_capacity, requested_files, nb_receivers):
         self.multicast_group = multicast_group
         self.files = files
         self.receivers = receivers
         self.session = MulticastSession(library=files, receivers=receivers, cache_capacity=cache_capacity)
-        # self.session.format_videos()
         self.indices = self.session.get_chunks_indices()
         self.caches = self.session.get_indices_per_user_cache(self.indices)
         self.chunked_files = self.split_chunks_videos()
@@ -26,6 +25,8 @@ class MulticastServer:
         self.sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         ttl = struct.pack('b', 1)
         self.sock.setsockopt(socket.IPPROTO_IP, socket.IP_MULTICAST_TTL, ttl)
+        self.nb_receivers = nb_receivers
+        
         
     def split_chunks(self):
         '''
@@ -111,7 +112,6 @@ class MulticastServer:
 
 
     def send_packets(self):
-        while True:
             for packet in self.transmitted_packets:
                 encoded_packet = encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
@@ -120,19 +120,19 @@ class MulticastServer:
                 for chunk in chunked_packets:
                     self.sock.sendto(chunk, self.multicast_group)
                     
-            logger.info(f'Sending last packet...')
             self.sock.sendto(b"LAST_PACKET", self.multicast_group)
-            logger.info("Sending again in 8 seconds...")
-            time.sleep(8)
+            logger.success("Multicast transmission finished.")
+
     
     def update_requests(self, unicast_server):
-        while True:
-            time.sleep(5)  # Adjust as needed for how frequently to check for new requests
-            if unicast_server.requests:
-                unicast_server.requests.clear()
-                self.generate_transmitted_packets()
+        self.generate_transmitted_packets()
     
     def start(self, unicast_server):
         self.update_cache_with_files()
         threading.Thread(target=self.update_requests, args=(unicast_server,)).start()
-        self.send_packets()
+        
+        while True:
+            if unicast_server.check_connections(self.nb_receivers):
+                time.sleep(5)
+                self.send_packets()
+                unicast_server.reset_connections()

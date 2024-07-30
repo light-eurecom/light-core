@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import threading
@@ -32,8 +33,7 @@ def is_folder_empty(folder_path):
     return len(os.listdir(folder_path)) == 0
 
 
-def main():
-    
+def main(args):
     try:
         with open(LIBRARY_FILE, 'r') as file:
             library = json.load(file)
@@ -45,19 +45,16 @@ def main():
     receivers = ['paul', 'anto', 'jony', 'elio', 'rony']
     requested_files = dict({1: 2, 2: 5, 3: 6, 4: 8, 5: 9})
     cache_capacity = 4
-    
-    # if not folder_exists(FORMATTED_VIDEOS_FOLDER) or is_folder_empty(FORMATTED_VIDEOS_FOLDER):
-    #     logger.info("Videos not formatted yet, formatting...")
-    #     os.makedirs(FORMATTED_VIDEOS_FOLDER, exist_ok=True)
-    #     video_formatter = VideoFormatter(files)
-    #     video_formatter.format_videos()
-    # else:
-    #     logger.info("Videos already formatted, skipping...")
 
-    multicast_server = MulticastServer(MULTICAST_GROUP, files, receivers, cache_capacity, requested_files)
+    multicast_server = MulticastServer(MULTICAST_GROUP, files, receivers, cache_capacity, requested_files, args.nb_receivers)
     unicast_server = UnicastServer(users_cache=multicast_server.get_users_cache())
     threading.Thread(target=unicast_server.start).start()
     multicast_server.start(unicast_server)
-
+    
 if __name__ == "__main__":
-    main()
+    parser = argparse.ArgumentParser(
+                    prog='Light server',
+                    description='Creates a a new server for Light communication.',
+                    )
+    parser.add_argument('nb_receivers', help='The number of expected receivers.',  type=int)         # positional argument
+    main(parser.parse_args())
