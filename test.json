@@ -1,0 +1,44 @@
+{
+    "files": [
+        {
+            "id": 1,
+            "value": "0a1b2c3d4e"
+        },
+        {
+            "id": 2,
+            "value": "5f6a7b8c9d"
+        },
+        {
+            "id": 3,
+            "value": "a1b2c3d4e5"
+        },
+        {
+            "id": 4,
+            "value": "f6a7b8c9d0"
+        },
+        {
+            "id": 5,
+            "value": "1a2b3c4d5e"
+        },
+        {
+            "id": 6,
+            "value": "6f7a8b9c0d"
+        },
+        {
+            "id": 7,
+            "value": "b1c2d3e4f5"
+        },
+        {
+            "id": 8,
+            "value": "7f8a9b0c1d"
+        },
+        {
+            "id": 9,
+            "value": "c2d3e4f5a1"
+        },
+        {
+            "id": 10,
+            "value": "8a9b0c1d2e"
+        }
+    ]
+}

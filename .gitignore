@@ -8,6 +8,7 @@ __pycache__/
 
 # Cache files
 *server*.txt
+*server*.mp4
 
 # Distribution / packaging
 .Python
