@@ -132,8 +132,8 @@ class MulticastReceiver:
 
         # Save the decoded message as a video file
         file_path = f"server{self.light_id}-video_{file_id}.mp4"
-        self.save_video_file(file_path, decoded_message)
-        logger.info(f"Successfully decoded and saved as: {file_path}")
+        # self.save_video_file(file_path, decoded_message)
+        # logger.info(f"Successfully decoded and saved as: {file_path}")
 
         # Log the success message
-        logger.success("Video file has been successfully saved.")
+        logger.success(decoded_message)

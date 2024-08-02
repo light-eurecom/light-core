@@ -8,7 +8,7 @@ from package.video_formatter import VideoFormatter
 from utils import logger
 
 MULTICAST_GROUP = ('224.0.0.1', 10000)
-LIBRARY_FILE = 'library.json'
+LIBRARY_FILE = 'test.json'
 FORMATTED_VIDEOS_FOLDER = "./compressed_videos"
 
 def folder_exists(folder_path):

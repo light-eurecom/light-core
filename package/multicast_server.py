@@ -18,7 +18,8 @@ class MulticastServer:
         self.session = MulticastSession(library=files, receivers=receivers, cache_capacity=cache_capacity)
         self.indices = self.session.get_chunks_indices()
         self.caches = self.session.get_indices_per_user_cache(self.indices)
-        self.chunked_files = self.split_chunks_videos()
+        # self.chunked_files = self.split_chunks_videos()
+        self.chunked_files = self.split_chunks()
         self.caches_with_files = defaultdict(dict)
         self.transmitted_packets = []
         self.requested_files = requested_files
@@ -33,17 +34,17 @@ class MulticastServer:
         TODO: this works only in the files are (i) strings and (ii) of equal length and (iii) chunk size is not integer. We will need to generalize.
         '''
         
-        if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
-            raise Exception('At least one file is not of string type')
-        if len(set([len(f) for f in self.files])) > 1 :
-            raise Exception('Files are not of the same size')
-        if not (len(self.files[0])/len(self.indices)).is_integer() :
-            raise Exception('Chunk size is not integer')
-        chunk_size = int(len(self.files[0])/len(self.indices))
+        # if len([1 for f in self.files if not isinstance(f, str)]) > 0 :
+        #     raise Exception('At least one file is not of string type')
+        # if len(set([len(f) for f in self.files])) > 1 :
+        #     raise Exception('Files are not of the same size')
+        # if not (len(self.files[0])/len(self.indices)).is_integer() :
+        #     raise Exception('Chunk size is not integer')
+        chunk_size = int(len(self.files[0]["value"]) / len(self.indices))
 
         splitted = dict()
         for f in self.files:
-            splitted[f] = {ind: bytes(f[i*chunk_size : (i+1)*chunk_size], 'utf-8') for i,ind in enumerate(self.indices)}
+            splitted[f["id"]] = {ind: bytes(f["value"][i*chunk_size : (i+1)*chunk_size], 'utf-8') for i, ind in enumerate(self.indices)}
 
         return splitted
     
@@ -90,7 +91,7 @@ class MulticastServer:
         list_of_xor_packets = self.session.get_list_of_xor_packets_for_transmission(self.requested_files)
         self.transmitted_packets = []
         
-        for i, xor_packet in enumerate(list_of_xor_packets):
+        for _, xor_packet in enumerate(list_of_xor_packets):
             packet = None
             packet_obj = {}
             for j, fc in enumerate(xor_packet):
@@ -112,6 +113,7 @@ class MulticastServer:
 
 
     def send_packets(self):
+            print(self.transmitted_packets)
             for packet in self.transmitted_packets:
                 encoded_packet = encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
