@@ -42,3 +42,18 @@ Example, with user 1 requesting file 2:
 ```bash
 python3 receiver.py 1 -c 2
 ```
+
+## Transmission flow
+
+Here is how a communication works:
+
+1. You start the server, indicating how many receivers it expects. It then waits for each receivers to ask for their cache before starting multicast
+2. The server serves each receiver with their respecting caches, over unicast. 
+3. When all receivers have been served, the multicast can start
+4. When all multicast packets have been sent, the communication ends
+
+### Packet format
+
+Each multicast transmission consists of:
+
+- Data packets, 
