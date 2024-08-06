@@ -1,8 +1,11 @@
 import base64
+import configparser
 import json
+import os
 from loguru import logger # type: ignore
 import gzip
 import io
+import ast
 
 logger.remove()  # Remove the default configuration (file handler)
 logger.add(lambda msg: print(msg, end=''), colorize=True, format="<green>{time:YYYY-MM-DD HH:mm:ss.SSS}</green> | <level>{level: <8}</level> | <level>{message}</level>", level="INFO", diagnose=False)
@@ -81,3 +84,46 @@ def decode_packet(packet):
     except Exception as e:
         logger.error(e)
         return None
+    
+    
+    
+def folder_exists(folder_path):
+    """
+    Checks if the folder exists.
+
+    :param folder_path: Path to the folder
+    :return: True if folder exists, False otherwise
+    """
+    return os.path.exists(folder_path) and os.path.isdir(folder_path)
+    
+def is_folder_empty(folder_path):
+    """
+    Checks if the folder is empty.
+
+    :param folder_path: Path to the folder
+    :return: True if folder is empty, False otherwise
+    """
+    if not folder_exists(folder_path):
+        raise FileNotFoundError(f"The folder at {folder_path} does not exist or is not a directory.")
+    
+    return len(os.listdir(folder_path)) == 0
+
+def read_config(config_file):
+    """
+    Reads the configuration file and returns the config dictionary.
+
+    :param config_file: Path to the configuration file
+    :return: Configuration dictionary
+    """
+    config = configparser.ConfigParser()
+    try:
+        config.read(config_file)
+        groups = []
+        for group in json.loads(config.get('server', 'multicast_groups')):
+            multicast_group = (group, 1000)
+            groups.append(multicast_group)
+        library_file = config.get('server', 'library_file')
+        return {'MULTICAST_GROUPS': groups, 'LIBRARY_FILE': library_file}
+    except Exception as e:
+        logger.error(f"Error reading config file {config_file}: {e}")
+        raise

@@ -8,14 +8,17 @@ from utils import logger, split_into_chunks, encode_packet
 CHUNK_SIZE = 2048
 
 class UnicastServer:
-    def __init__(self, users_cache, host='192.168.1.10', port=10001):
-        self.host = host
-        self.port = port
-        self.users_cache = users_cache
-        self.requests = defaultdict(list)
-        self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.server_socket.bind((self.host, self.port))
-        self.server_socket.listen(5)
+    def __init__(self, users_cache, host='192.168.1.11', port=10001):
+        try:
+            self.host = host
+            self.port = port
+            self.users_cache = users_cache
+            self.requests = defaultdict(list)
+            self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+            self.server_socket.bind((self.host, self.port))
+            self.server_socket.listen(5)
+        except Exception as e:
+            logger.warning("Unicast server already up. Skipping...")
     
     def check_connections(self, nb):
         return len(self.requests.keys()) >= nb
@@ -36,10 +39,13 @@ class UnicastServer:
                 
         data = split_into_chunks(cache, CHUNK_SIZE)
         logger.info("sending cache packets to receiver...")
+        multicast_addresses = ["224.0.0.1", "224.0.0.2"]
+        client_socket.sendall(json.dumps(multicast_addresses).encode('utf-8'))
         for d in data:
             client_socket.sendall(d)
             if(d == b'LAST_PACKET'):
                 logger.success(f"Send cache to {user_id}.")
+        
         client_socket.close()
         self.requests[user_id].append(file_id)
 

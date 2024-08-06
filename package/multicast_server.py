@@ -113,7 +113,6 @@ class MulticastServer:
 
 
     def send_packets(self):
-            print(self.transmitted_packets)
             for packet in self.transmitted_packets:
                 encoded_packet = encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
@@ -126,15 +125,22 @@ class MulticastServer:
             logger.success("Multicast transmission finished.")
 
     
-    def update_requests(self, unicast_server):
+    def update_requests(self):
         self.generate_transmitted_packets()
     
     def start(self, unicast_server):
         self.update_cache_with_files()
-        threading.Thread(target=self.update_requests, args=(unicast_server,)).start()
+        threading.Thread(target=self.update_requests).start()
         
-        while True:
-            if unicast_server.check_connections(self.nb_receivers):
-                time.sleep(5)
-                self.send_packets()
-                unicast_server.reset_connections()
+        if unicast_server:
+            # Case where the server also handle the unicast
+            while True:
+                if unicast_server.check_connections(self.nb_receivers):
+                    time.sleep(5)
+                    self.send_packets()
+                    unicast_server.reset_connections()
+        
+        else:
+            while True:
+                    time.sleep(5)
+                    self.send_packets()
