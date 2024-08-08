@@ -21,16 +21,19 @@ def main(args):
     receivers = ['paul', 'anto', 'jony', 'elio', 'rony']
     requested_files = dict({1: 2, 2: 5, 3: 6, 4: 8, 5: 9})
     cache_capacity = 4
-
-    multicast_server = MulticastServer(multicast_groups[0], files, receivers, cache_capacity, requested_files, args.nb_receivers)
-    unicast_server = UnicastServer(users_cache=multicast_server.get_users_cache())
-    threading.Thread(target=unicast_server.start).start()
-    multicast_server.start(unicast_server)
     
-    for i in range(multicast_groups):
-        if i != 0:
-            logger.info(f"Starting mutlicast on {multicast_groups[i]}")
-            multicast_server = MulticastServer(multicast_groups[i], files, receivers, cache_capacity, requested_files, args.nb_receivers)
+    
+
+    for i in range(len(multicast_groups)):
+        group = multicast_groups[i]
+        logger.info(f"Starting mutlicast on {str(group)}")
+        if i == 0:
+            multicast_server = MulticastServer(group, files, receivers, cache_capacity, requested_files, args.nb_receivers)
+            unicast_server = UnicastServer(users_cache=multicast_server.get_users_cache(), config_file=args.config)
+            threading.Thread(target=unicast_server.start).start()
+            multicast_server.start(unicast_server)
+        else:
+            multicast_server = MulticastServer(group, files, receivers, cache_capacity, requested_files, args.nb_receivers)
             multicast_server.start(unicast_server=None)
 
 

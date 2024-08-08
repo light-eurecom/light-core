@@ -130,17 +130,13 @@ class MulticastServer:
     
     def start(self, unicast_server):
         self.update_cache_with_files()
-        threading.Thread(target=self.update_requests).start()
+        threading.Thread(target=self.update_requests, args=()).start()
         
         if unicast_server:
-            # Case where the server also handle the unicast
             while True:
                 if unicast_server.check_connections(self.nb_receivers):
                     time.sleep(5)
                     self.send_packets()
                     unicast_server.reset_connections()
-        
         else:
-            while True:
-                    time.sleep(5)
-                    self.send_packets()
+            self.send_packets()

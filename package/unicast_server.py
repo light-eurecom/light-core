@@ -3,22 +3,24 @@ import socket
 import time
 import threading
 from collections import defaultdict
-from utils import logger, split_into_chunks, encode_packet
+from utils import get_multicast_addresses, logger, split_into_chunks, encode_packet
 
 CHUNK_SIZE = 2048
 
 class UnicastServer:
-    def __init__(self, users_cache, host='192.168.1.11', port=10001):
+    def __init__(self, users_cache, config_file, host='192.168.1.11', port=10001):
         try:
             self.host = host
             self.port = port
             self.users_cache = users_cache
+            self.config_file = config_file
             self.requests = defaultdict(list)
             self.server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
             self.server_socket.bind((self.host, self.port))
             self.server_socket.listen(5)
         except Exception as e:
-            logger.warning("Unicast server already up. Skipping...")
+            logger.critical("Unicast server already up. Skipping...")
+            exit()
     
     def check_connections(self, nb):
         return len(self.requests.keys()) >= nb
@@ -39,7 +41,7 @@ class UnicastServer:
                 
         data = split_into_chunks(cache, CHUNK_SIZE)
         logger.info("sending cache packets to receiver...")
-        multicast_addresses = ["224.0.0.1", "224.0.0.2"]
+        multicast_addresses = get_multicast_addresses(self.config_file)
         client_socket.sendall(json.dumps(multicast_addresses).encode('utf-8'))
         for d in data:
             client_socket.sendall(d)

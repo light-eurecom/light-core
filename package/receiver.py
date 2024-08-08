@@ -43,7 +43,6 @@ class MulticastReceiver:
                     # Skip the first packet
                     first_packet_received = True
                     self.multicast_addresses = json.loads(data.decode("utf-8"))
-                    print(data.decode("utf-8"))
                     continue
                 
                 if b'LAST_PACKET' in data:
@@ -95,15 +94,17 @@ class MulticastReceiver:
             file.write(data)
             
     def join_multicast_group(self, multicast_group):
+        print(multicast_group)
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
-        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind(SERVER_ADDRESS)
+        sock.bind((multicast_group, 10000))  # Bind directly to the multicast group and port
 
         group = socket.inet_aton(multicast_group)
         mreq = struct.pack('4sL', group, socket.INADDR_ANY)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         self.socks.append(sock)
+        print(sock)
+
     
     def start(self, file_id):
 

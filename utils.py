@@ -120,10 +120,28 @@ def read_config(config_file):
         config.read(config_file)
         groups = []
         for group in json.loads(config.get('server', 'multicast_groups')):
-            multicast_group = (group, 1000)
+            multicast_group = (group, 10000)
             groups.append(multicast_group)
         library_file = config.get('server', 'library_file')
         return {'MULTICAST_GROUPS': groups, 'LIBRARY_FILE': library_file}
+    except Exception as e:
+        logger.error(f"Error reading config file {config_file}: {e}")
+        raise
+
+def get_multicast_addresses(config_file):
+    """
+    Reads the configuration file and returns only the multicast addresses.
+
+    :param config_file: Path to the configuration file
+    :return: the multicast addresses as list
+    """
+    config = configparser.ConfigParser()
+    try:
+        config.read(config_file)
+        groups = []
+        for group in json.loads(config.get('server', 'multicast_groups')):
+            groups.append(group)
+        return groups
     except Exception as e:
         logger.error(f"Error reading config file {config_file}: {e}")
         raise
