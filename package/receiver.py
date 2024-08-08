@@ -1,13 +1,15 @@
 import base64
 import json
+import os
 import socket
 import struct
+import subprocess
 from utils import xor, logger, decode_packet
 
 BUFFER_SIZE = 2048
 MULTICAST_GROUP = '224.0.0.1'
 SERVER_ADDRESS = ('', 10000)
-UNICAST_SERVER_ADDRESS = ('192.168.1.10', 10001)
+UNICAST_SERVER_ADDRESS = ('192.168.1.11', 10001)
 
 class MulticastReceiver:
     def __init__(self, light_id, cache=None):
@@ -90,6 +92,22 @@ class MulticastReceiver:
         """Save the video file."""
         with open(file_path, "wb") as file:
             file.write(data)
+            
+    def open_video_with_vlc(self, file_path):
+        """Open the video file with VLC media player."""
+        try:
+            # Adjust the command based on your OS
+            if os.name == 'posix':  # Unix-like (Linux, macOS)
+                try:
+                    subprocess.run(['vlc', file_path])
+                except Exception as e:
+                   subprocess.run(['/Applications/VLC.app/Contents/MacOS/VLC', file_path]) 
+            elif os.name == 'nt':  # Windows
+                subprocess.run(['C:\\Program Files\\VideoLAN\\VLC\\vlc.exe', file_path])
+            else:
+                logger.error("Unsupported OS for automatically opening VLC.")
+        except Exception as e:
+            logger.error(f"Failed to open VLC: {e}")
     
     def start(self, file_id):
         received_packets = []
@@ -133,7 +151,8 @@ class MulticastReceiver:
         # Save the decoded message as a video file
         file_path = f"server{self.light_id}-video_{file_id}.mp4"
         self.save_video_file(file_path, decoded_message)
-        logger.info(f"Successfully decoded and saved as: {file_path}")
+        logger.info(f"Successfully decoded and saved as: {file_path}. Opening with VLC...")
+        self.open_video_with_vlc(file_path)
 
         # Log the success message
         logger.success("Video file has been successfully saved.")
