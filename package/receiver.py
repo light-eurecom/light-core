@@ -108,8 +108,8 @@ class MulticastReceiver:
     
     def start(self, file_id):
 
-        for address in self.multicast_addresses:
-            self.join_multicast_group(address)
+     for address in self.multicast_addresses:
+        self.join_multicast_group(address)
 
         received_packets = []
         chunks = {sock: [] for sock in self.socks}

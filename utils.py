@@ -95,6 +95,15 @@ def folder_exists(folder_path):
     :return: True if folder exists, False otherwise
     """
     return os.path.exists(folder_path) and os.path.isdir(folder_path)
+
+def file_exists(file_path):
+    """
+    Checks if the file exists.
+
+    :param file_path: Path to the file
+    :return: True if file exists, False otherwise
+    """
+    return os.path.exists(file_path)
     
 def is_folder_empty(folder_path):
     """

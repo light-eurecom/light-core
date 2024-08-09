@@ -6,7 +6,7 @@ import time
 import threading
 from collections import defaultdict
 from package.multicast_session import MulticastSession
-from utils import encode_packet, split_into_chunks, xor, logger
+from utils import encode_packet, file_exists, split_into_chunks, xor, logger
 
 BUFFER_SIZE = 2048  # 1 MB buffer size
 
@@ -139,4 +139,7 @@ class MulticastServer:
                     self.send_packets()
                     unicast_server.reset_connections()
         else:
-            self.send_packets()
+            while True:
+                if file_exists('server1-file_2-test.txt'):
+                    time.sleep(15)
+                    self.send_packets()
