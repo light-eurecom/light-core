@@ -9,7 +9,7 @@ from utils import xor, logger, decode_packet
 BUFFER_SIZE = 2048
 MULTICAST_GROUP = '224.0.0.1'
 SERVER_ADDRESS = ('', 10000)
-UNICAST_SERVER_ADDRESS = ('192.168.1.11', 10001)
+UNICAST_SERVER_ADDRESS = ('192.168.1.10', 10001)
 
 class MulticastReceiver:
     def __init__(self, light_id, cache=None):

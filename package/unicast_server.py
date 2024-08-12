@@ -8,7 +8,7 @@ from utils import logger, split_into_chunks, encode_packet
 CHUNK_SIZE = 2048
 
 class UnicastServer:
-    def __init__(self, users_cache, host='192.168.1.11', port=10001):
+    def __init__(self, users_cache, host='192.168.1.10', port=10001):
         self.host = host
         self.port = port
         self.users_cache = users_cache
