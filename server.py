@@ -1,6 +1,7 @@
 import argparse
 import json
 import threading
+import time
 from package.multicast_server import MulticastServer
 from package.unicast_server import UnicastServer
 from utils import logger, read_config
@@ -35,6 +36,7 @@ def main(args):
         else:
             multicast_server = MulticastServer(group, files, receivers, cache_capacity, requested_files, args.nb_receivers)
             multicast_server.start(unicast_server=None)
+        time.sleep(5)
 
 
 

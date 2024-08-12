@@ -114,6 +114,7 @@ class MulticastServer:
 
     def send_packets(self):
             for packet in self.transmitted_packets:
+                print(self.multicast_group)
                 encoded_packet = encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
                 chunked_packets = split_into_chunks(packet_bytes, BUFFER_SIZE, last_packet=b"END_OF_CHUNK")
@@ -135,11 +136,11 @@ class MulticastServer:
         if unicast_server:
             while True:
                 if unicast_server.check_connections(self.nb_receivers):
+                    logger.info(f"Starting on {self.multicast_group}")
                     time.sleep(5)
                     self.send_packets()
                     unicast_server.reset_connections()
+                    break
         else:
-            while True:
-                if file_exists('server1-file_2-test.txt'):
-                    time.sleep(15)
-                    self.send_packets()
+            logger.info(f"Starting on {self.multicast_group}")
+            self.send_packets()

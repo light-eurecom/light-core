@@ -128,9 +128,11 @@ def read_config(config_file):
     try:
         config.read(config_file)
         groups = []
+        i = 0
         for group in json.loads(config.get('server', 'multicast_groups')):
-            multicast_group = (group, 10000)
+            multicast_group = (group, 10000 + i)
             groups.append(multicast_group)
+            i = i +1
         library_file = config.get('server', 'library_file')
         return {'MULTICAST_GROUPS': groups, 'LIBRARY_FILE': library_file}
     except Exception as e:

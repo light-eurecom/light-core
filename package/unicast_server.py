@@ -8,7 +8,7 @@ from utils import get_multicast_addresses, logger, split_into_chunks, encode_pac
 CHUNK_SIZE = 2048
 
 class UnicastServer:
-    def __init__(self, users_cache, config_file, host='192.168.1.11', port=10001):
+    def __init__(self, users_cache, config_file, host='192.168.1.10', port=10001):
         try:
             self.host = host
             self.port = port

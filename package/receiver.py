@@ -5,7 +5,7 @@ from utils import xor, logger, decode_packet
 
 BUFFER_SIZE = 2048
 SERVER_ADDRESS = ('', 10000)
-UNICAST_SERVER_ADDRESS = ('192.168.1.11', 10001)
+UNICAST_SERVER_ADDRESS = ('192.168.1.10', 10001)
 
 class MulticastReceiver:
     def __init__(self, light_id, cache=None):
@@ -93,71 +93,81 @@ class MulticastReceiver:
         with open(file_path, "wb") as file:
             file.write(data)
             
-    def join_multicast_group(self, multicast_group):
-        print(multicast_group)
+    def join_multicast_group(self, multicast_group, index: int):
+        port = 10000 + index
+        print(f"{multicast_group}:{port}")
         sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM, socket.IPPROTO_UDP)
         sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-        sock.bind((multicast_group, 10000))  # Bind directly to the multicast group and port
+        sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEPORT, 1)
+        
+        # Bind to the interface address, not the multicast address
+        sock.bind(('', port))  # Bind to all interfaces on the given port
 
         group = socket.inet_aton(multicast_group)
         mreq = struct.pack('4sL', group, socket.INADDR_ANY)
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         self.socks.append(sock)
-        print(sock)
 
-    
+        
+
     def start(self, file_id):
-
-     for address in self.multicast_addresses:
-        self.join_multicast_group(address)
-
-        received_packets = []
-        chunks = {sock: [] for sock in self.socks}
-        while True:
-            for sock in self.socks:
-                data, _ = sock.recvfrom(1024)
-                if data == b"END_OF_CHUNK":
-                    received_packets.append(decode_packet(b''.join(chunks[sock])))
-                    chunks[sock] = []
-                elif data == b"LAST_PACKET":
-                    self.socks.remove(sock)
-                    break
-                else:
-                    chunks[sock].append(data)
-            if not self.socks:
-                break
-
-        list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
-        transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
-        indices = received_packets[0]["all_indices"]
-        decoded_chunks = {}
-        current_fileID = None
-        current_chunkID = None
-        for i, xor_packet in enumerate(list_of_xor_packets):
-            packet = transmitted_packets[i]
-            for fc in xor_packet:
-                fileID = fc[0]
-                chunkID = fc[1]
-                if self.check_key_in_dict_items(self.get_cache().items(), chunkID):
-                    packet = xor(packet, self.get_cache()[fileID][chunkID])
-                else:
-                    current_fileID = fileID
-                    current_chunkID = chunkID
-            if current_fileID == file_id:
-                decoded_chunks[current_chunkID] = packet
-
         decoded_message = b""
-        for ind in indices:
-            if tuple(ind) in decoded_chunks:
-                decoded_message += decoded_chunks[tuple(ind)]
-            else:
-                decoded_message += self.get_cache()[file_id][tuple(ind)]
+        index = 0
+        
+        for address in self.multicast_addresses:
+            self.join_multicast_group(address, index)
+            index += 1
+            received_packets = []
+            chunks = {sock: [] for sock in self.socks}
+            
+            while True:
+                for sock in list(self.socks):  # Iterate over a copy of the list
+                    try:
+                        sock.settimeout(5)  # Set timeout to prevent blocking indefinitely
+                        data, _ = sock.recvfrom(1024)
+                        
+                        if data == b"END_OF_CHUNK":
+                            received_packets.append(decode_packet(b''.join(chunks[sock])))
+                            chunks[sock] = []
+                        elif data == b"LAST_PACKET":
+                            self.socks.remove(sock)
+                            sock.close()  # Close the socket after removing it
+                            break
+                        else:
+                            chunks[sock].append(data)
+                    
+                    except socket.timeout:
+                        logger.warning(f"Timeout on socket {sock}, continuing...")
+                        continue
+                
+                if not self.socks:
+                    break
 
-        # Save the decoded message as a video file
-        # file_path = f"server{self.light_id}-video_{file_id}.mp4"
-        # self.save_video_file(file_path, decoded_message)
-        # logger.info(f"Successfully decoded and saved as: {file_path}")
+            # Process the packets as before...
+            list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
+            transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
+            indices = received_packets[0]["all_indices"]
+            decoded_chunks = {}
+            current_fileID = None
+            current_chunkID = None
+            
+            for i, xor_packet in enumerate(list_of_xor_packets):
+                packet = transmitted_packets[i]
+                for fc in xor_packet:
+                    fileID = fc[0]
+                    chunkID = fc[1]
+                    if self.check_key_in_dict_items(self.get_cache().items(), chunkID):
+                        packet = xor(packet, self.get_cache()[fileID][chunkID])
+                    else:
+                        current_fileID = fileID
+                        current_chunkID = chunkID
+                if current_fileID == file_id:
+                    decoded_chunks[current_chunkID] = packet
 
-        # # Log the success message
-        # logger.success("Video file has been successfully saved.")
-        logger.success(decoded_message)
+            for ind in indices:
+                if tuple(ind) in decoded_chunks:
+                    decoded_message += decoded_chunks[tuple(ind)]
+                else:
+                    decoded_message += self.get_cache()[file_id][tuple(ind)]
+
+            logger.success(decoded_message)
