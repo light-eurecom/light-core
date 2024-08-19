@@ -18,8 +18,8 @@ class MulticastServer:
         self.session = MulticastSession(library=files, receivers=receivers, cache_capacity=cache_capacity)
         self.indices = self.session.get_chunks_indices()
         self.caches = self.session.get_indices_per_user_cache(self.indices)
-        # self.chunked_files = self.split_chunks_videos()
-        self.chunked_files = self.split_chunks()
+        self.chunked_files = self.split_chunks_videos()
+        # self.chunked_files = self.split_chunks()
         self.caches_with_files = defaultdict(dict)
         self.transmitted_packets = []
         self.requested_files = requested_files
@@ -110,11 +110,6 @@ class MulticastServer:
             packet_obj["value"] = packet
             self.transmitted_packets.append(packet_obj)
         self.transmitted_packets[0]["all_indices"] = self.indices
-        try:
-            with open("packets_multiple_senders", 'w') as file:
-                file.write(str(self.transmitted_packets))
-        except Exception as e:
-            print(f"Error writing to {self.filename}: {e}")
 
 
     def send_packets(self):
@@ -128,7 +123,7 @@ class MulticastServer:
                     self.sock.sendto(chunk, self.multicast_group)
                     
             self.sock.sendto(b"LAST_PACKET", self.multicast_group)
-            logger.success("Multicast transmission finished.")
+            logger.success(f"Multicast transmission finished for group {self.multicast_group}")
 
     
     def update_requests(self):
