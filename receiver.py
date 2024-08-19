@@ -6,9 +6,9 @@ from package.cache import Cache
 def main(args):
     
     USER_ID = args.receiver
-    FILE_ID = args.content
+    FILE_ID = args.request_content
 
-    receiver = MulticastReceiver(USER_ID, None)
+    receiver = MulticastReceiver(USER_ID, args.config, None)
     cache_file = f'server{USER_ID}-file_{FILE_ID}-test.txt'
     cache = Cache(cache_file)
     
@@ -26,6 +26,7 @@ if __name__ == "__main__":
                     description='Creates a a new receiver for Light communication.',
                     )
     parser.add_argument('receiver', help='The receiver ID.',  type=int)         # positional argument
-    parser.add_argument('-c', '--content', help='The requested content ID.',  type=int)      # option that takes a value
+    parser.add_argument('-rq', '--request_content', help='The requested content ID.',  type=int)      # option that takes a value
+    parser.add_argument('-c', '--config', help='The config file associated with the receiver.', required=True, type=str)  # required option that takes a value
 
     main(parser.parse_args())

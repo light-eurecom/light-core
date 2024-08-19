@@ -96,7 +96,7 @@ class MulticastServer:
             packet_obj = {}
             for j, fc in enumerate(xor_packet):
                 try:
-                    fileID = int(fc[0])  # Ensure fileID is an integer
+                    fileID = int(fc[0])-1  # Ensure fileID is an integer
                     chunkID = fc[1]
                     chunk = self.chunked_files[self.files[fileID]["id"]][chunkID]
                     if j == 0:
@@ -110,6 +110,11 @@ class MulticastServer:
             packet_obj["value"] = packet
             self.transmitted_packets.append(packet_obj)
         self.transmitted_packets[0]["all_indices"] = self.indices
+        try:
+            with open("packets_multiple_senders", 'w') as file:
+                file.write(str(self.transmitted_packets))
+        except Exception as e:
+            print(f"Error writing to {self.filename}: {e}")
 
 
     def send_packets(self):

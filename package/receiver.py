@@ -1,19 +1,19 @@
 import json
 import socket
 import struct
-from utils import xor, logger, decode_packet
+from utils import xor, logger, decode_packet, get_unicast_address
 
 BUFFER_SIZE = 2048
 SERVER_ADDRESS = ('', 10000)
-UNICAST_SERVER_ADDRESS = ('192.168.1.10', 10001)
 
 class MulticastReceiver:
-    def __init__(self, light_id, cache=None):
+    def __init__(self, light_id, config_file, cache=None):
         self.light_id = light_id
         self.cache = cache
         self.list_of_xor_packets = []
         self.indices = []  # Assuming this is needed for decoding
         self.socks = []  # List of sockets for different multicast groups
+        self.unicast_server_address = (get_unicast_address(config_file), 10001)
 
 
     def set_list_of_xor_packets(self, packets):
@@ -29,7 +29,7 @@ class MulticastReceiver:
     def send_unicast_request(self, requested_fileID):
         try:
             unicast_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            unicast_sock.connect(UNICAST_SERVER_ADDRESS)
+            unicast_sock.connect(self.unicast_server_address)
             request_message = f"{self.light_id},{requested_fileID}"
             unicast_sock.sendall(request_message.encode('utf-8'))
             

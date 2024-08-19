@@ -3,14 +3,15 @@ import socket
 import time
 import threading
 from collections import defaultdict
-from utils import get_multicast_addresses, logger, split_into_chunks, encode_packet
+from utils import get_multicast_addresses, get_unicast_address, logger, split_into_chunks, encode_packet
 
 CHUNK_SIZE = 2048
 
 class UnicastServer:
-    def __init__(self, users_cache, config_file, host='192.168.1.10', port=10001):
+    def __init__(self, users_cache, config_file, port=10001):
         try:
-            self.host = host
+            self.host = get_unicast_address(config_file)
+            print(self.host)
             self.port = port
             self.users_cache = users_cache
             self.config_file = config_file
@@ -19,7 +20,7 @@ class UnicastServer:
             self.server_socket.bind((self.host, self.port))
             self.server_socket.listen(5)
         except Exception as e:
-            logger.critical("Unicast server already up. Skipping...")
+            logger.critical(e)
             exit()
     
     def check_connections(self, nb):

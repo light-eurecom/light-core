@@ -156,3 +156,21 @@ def get_multicast_addresses(config_file):
     except Exception as e:
         logger.error(f"Error reading config file {config_file}: {e}")
         raise
+    
+def get_unicast_address(config_file):
+    """
+    Reads the configuration file and returns only the unicast address.
+
+    :param config_file: Path to the configuration file
+    :return: the unicast address as str
+    """
+
+    try:
+        # Read the config file
+        config = configparser.ConfigParser()
+        config.read(config_file)
+        # Access the unicast address
+        return str(config.get('unicast_server', 'unicast_ip'))
+    except Exception as e:
+        logger.error(f"Error reading config file {config_file}: {e}")
+        raise
