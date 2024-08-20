@@ -25,7 +25,7 @@ def main(args):
     
     
     files = split_values(files, len(multicast_groups))
-
+    print(files)
     for i in range(len(multicast_groups)):
         group = multicast_groups[i]
         logger.info(f"Starting mutlicast on {str(group)}")

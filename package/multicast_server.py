@@ -109,6 +109,12 @@ class MulticastServer:
             packet_obj["value"] = packet
             self.transmitted_packets.append(packet_obj)
         self.transmitted_packets[0]["all_indices"] = self.indices
+        
+        try:
+            with open("packets.json", 'w') as file:
+                file.write(str(self.transmitted_packets))
+        except Exception as e:
+            print(f"Error writing to {self.filename}: {e}")
 
 
     def send_packets(self):
