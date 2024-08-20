@@ -60,5 +60,24 @@ Each multicast communcation consists of:
 - Data packets, the first packet also containing "all_indices" field, needed to decrypt the overall packets. 
 - A last packet, simple as "LAST_PACKET"
 
-Here would be a basic communication:
+#### Unicast data packet format
+
+```
+# request
+{receiver_id}-{file_id}
+# ex: 1-2
+
+# response
+# the corresponding cache is sent under the following format:
+
+{1: {(1, 2): b'i', (1, 3): b'n', (1, 4): b's', (1, 5): b'u'},
+2: {(1, 2): b'a', (1, 3): b'b', (1, 4): b's', (1, 5): b'o'},
+...
+n-1: {(1, 2): b'v', (1, 3): b'o', (1, 4): b'l', (1, 5): b'u'},
+n: {(1, 2): b'r', (1, 3): b'e', (1, 4): b'g', (1, 5): b'a'}}
+
+# This is just an example
+```
+
+
 
