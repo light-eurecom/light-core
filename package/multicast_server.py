@@ -41,7 +41,6 @@ class MulticastServer:
         # if not (len(self.files[0])/len(self.indices)).is_integer() :
         #     raise Exception('Chunk size is not integer')
         chunk_size = int(len(self.files[0]["value"]) / len(self.indices))
-
         splitted = dict()
         for f in self.files:
             splitted[f["id"]] = {ind: bytes(f["value"][i*chunk_size : (i+1)*chunk_size], 'utf-8') for i, ind in enumerate(self.indices)}
@@ -110,11 +109,6 @@ class MulticastServer:
             packet_obj["value"] = packet
             self.transmitted_packets.append(packet_obj)
         self.transmitted_packets[0]["all_indices"] = self.indices
-        try:
-            with open("packets_multiple_senders", 'w') as file:
-                file.write(str(self.transmitted_packets))
-        except Exception as e:
-            print(f"Error writing to {self.filename}: {e}")
 
 
     def send_packets(self):

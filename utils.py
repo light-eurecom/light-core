@@ -174,3 +174,30 @@ def get_unicast_address(config_file):
     except Exception as e:
         logger.error(f"Error reading config file {config_file}: {e}")
         raise
+    
+    
+def split_values(data, n):
+    # Ensure the number n is smaller than the length of any "value"
+    for file in data:
+        if n > len(file['value']):
+            raise ValueError(f"The provided number {n} is greater than the length of value '{file['value']}'")
+
+    # Function to split a string into n equal parts
+    def split_string_into_parts(value, n):
+        k, m = divmod(len(value), n)
+        return [value[i * k + min(i, m):(i + 1) * k + min(i + 1, m)] for i in range(n)]
+
+    result = []
+    
+    # Splitting each value into n parts
+    for i in range(n):
+        chunk = []
+        for file in data:
+            parts = split_string_into_parts(file['value'], n)
+            chunk.append({
+                "id": file['id'],
+                "value": str(parts[i])
+            })
+        result.append(chunk)
+    
+    return result

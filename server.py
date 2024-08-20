@@ -4,7 +4,7 @@ import threading
 import time
 from package.multicast_server import MulticastServer
 from package.unicast_server import UnicastServer
-from utils import logger, read_config
+from utils import logger, read_config, split_values
 
 def main(args):
     try:
@@ -24,17 +24,18 @@ def main(args):
     cache_capacity = 4
     
     
+    files = split_values(files, len(multicast_groups))
 
     for i in range(len(multicast_groups)):
         group = multicast_groups[i]
         logger.info(f"Starting mutlicast on {str(group)}")
         if i == 0:
-            multicast_server = MulticastServer(group, files, receivers, cache_capacity, requested_files, args.nb_receivers)
+            multicast_server = MulticastServer(group, files[i], receivers, cache_capacity, requested_files, args.nb_receivers)
             unicast_server = UnicastServer(users_cache=multicast_server.get_users_cache(), config_file=args.config)
             threading.Thread(target=unicast_server.start).start()
             multicast_server.start(unicast_server)
         else:
-            multicast_server = MulticastServer(group, files, receivers, cache_capacity, requested_files, args.nb_receivers)
+            multicast_server = MulticastServer(group, files[i], receivers, cache_capacity, requested_files, args.nb_receivers)
             multicast_server.start(unicast_server=None)
         time.sleep(5)
 
