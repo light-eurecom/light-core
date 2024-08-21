@@ -163,6 +163,12 @@ class MulticastReceiver:
             # Process the packets as before...
             list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
             transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
+            try:
+                with open("packets_receiver.txt", 'w') as file:
+                    file.write(str(transmitted_packets))
+            except Exception as e:
+                print(f"Error writing to {self.filename}: {e}")
+                
             indices = received_packets[0]["all_indices"]
             decoded_chunks = {}
             current_fileID = None

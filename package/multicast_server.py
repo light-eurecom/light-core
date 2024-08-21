@@ -6,7 +6,7 @@ import time
 import threading
 from collections import defaultdict
 from package.multicast_session import MulticastSession
-from utils import encode_packet, file_exists, split_into_chunks, xor, logger
+from utils import encode_packet, split_into_chunks, xor, logger
 
 BUFFER_SIZE = 2048  # 1 MB buffer size
 
@@ -50,34 +50,37 @@ class MulticastServer:
     
     def split_chunks_videos(self):
         '''
+        Splits the videos into chunks and returns a dictionary with the chunks.
         '''
         splitted = dict()
         for f in self.files:
             list_of_chunks = self.split_video(f["compressed_path"])
-            # splitted[f["id"]] = {ind: self.split_video(f["compressed_path"]) for i,ind in enumerate(self.indices)}
-            splitted[f["id"]] = {ind: list_of_chunks[i] for i,ind in enumerate(self.indices)}
-
+            if list_of_chunks:  # Check if the splitting was successful
+                splitted[f["id"]] = {ind: list_of_chunks[i] for i, ind in enumerate(self.indices)}
+            else:
+                logger.error(f"[Error] Splitting failed for file: {f['compressed_path']}")
         return splitted
-    
+
     def split_video(self, file_path):
         """Split the video into n equal-sized chunks."""
         try:
-            video = open(file_path, 'rb')    
             video_size = os.path.getsize(file_path)
-            chunk_size = int(video_size/len(self.indices))
+            chunk_size = video_size // len(self.indices)  # Integer division
 
-            # Read and return video chunks
-            chunks = []
-            for _ in self.indices:
-                chunk = video.read(chunk_size)
-                chunks.append(chunk)
-            video.close()
-            return chunks
-        
+            with open(file_path, 'rb') as video:
+                chunks = []
+                for i, _ in enumerate(self.indices):
+                    if i == len(self.indices) - 1:  
+                        # For the last chunk, read the remainder of the video
+                        chunk = video.read()
+                    else:
+                        chunk = video.read(chunk_size)
+                    chunks.append(chunk)
+                return chunks
+            
         except Exception as e:
-            print("[Error] Unable to split video:", str(e))
+            logger.error("[Error] Unable to split video:", str(e))
             return None
-
     def update_cache_with_files(self):
         for user in range(1, self.session.nb_receivers + 1):
             for i, f in enumerate(self.files):
@@ -110,11 +113,16 @@ class MulticastServer:
             packet_obj["value"] = packet
             self.transmitted_packets.append(packet_obj)
         self.transmitted_packets[0]["all_indices"] = self.indices
+        try:
+            with open("packets_server.txt", 'w') as file:
+                file.write(str(self.transmitted_packets))
+        except Exception as e:
+            logger.error(f"Error writing to {self.filename}: {e}")
+        
 
 
     def send_packets(self):
             for packet in self.transmitted_packets:
-                print(self.multicast_group)
                 encoded_packet = encode_packet(packet)  # Encode the packet
                 packet_bytes = json.dumps(encoded_packet).encode('utf-8')  # Serialize the encoded packet to bytes
                 chunked_packets = split_into_chunks(packet_bytes, BUFFER_SIZE, last_packet=b"END_OF_CHUNK")
