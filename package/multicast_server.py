@@ -8,7 +8,7 @@ from collections import defaultdict
 from package.multicast_session import MulticastSession
 from utils import encode_packet, split_into_chunks, xor, logger
 
-BUFFER_SIZE = 2048  # 1 MB buffer size
+BUFFER_SIZE = 1024  # 1 MB buffer size
 
 class MulticastServer:
     def __init__(self, multicast_group, files, receivers, cache_capacity, requested_files, nb_receivers):
@@ -113,12 +113,6 @@ class MulticastServer:
             packet_obj["value"] = packet
             self.transmitted_packets.append(packet_obj)
         self.transmitted_packets[0]["all_indices"] = self.indices
-        try:
-            with open("packets_server.txt", 'w') as file:
-                file.write(str(self.transmitted_packets))
-        except Exception as e:
-            logger.error(f"Error writing to {self.filename}: {e}")
-        
 
 
     def send_packets(self):

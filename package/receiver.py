@@ -5,7 +5,7 @@ import struct
 import subprocess
 from utils import xor, logger, decode_packet, get_unicast_address
 
-BUFFER_SIZE = 2048
+BUFFER_SIZE = 1024
 SERVER_ADDRESS = ('', 10000)
 
 class MulticastReceiver:
@@ -163,12 +163,7 @@ class MulticastReceiver:
             # Process the packets as before...
             list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
             transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
-            try:
-                with open("packets_receiver.txt", 'w') as file:
-                    file.write(str(transmitted_packets))
-            except Exception as e:
-                print(f"Error writing to {self.filename}: {e}")
-                
+            
             indices = received_packets[0]["all_indices"]
             decoded_chunks = {}
             current_fileID = None
@@ -195,8 +190,10 @@ class MulticastReceiver:
 
             file_path = f"server{self.light_id}-video_{file_id}.mp4"
             self.save_video_file(file_path, decoded_message)
-            logger.info(f"Successfully decoded and saved as: {file_path}. Opening with VLC...")
-            self.open_video_with_vlc(file_path)
+            video_size = os.path.getsize(file_path)
+            logger.success(f"video size : {video_size}")
+            # logger.info(f"Successfully decoded and saved as: {file_path}. Opening with VLC...")
+            # self.open_video_with_vlc(file_path)
 
             # Log the success message
             logger.success("Video file has been successfully saved.")
