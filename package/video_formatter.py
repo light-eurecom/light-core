@@ -1,4 +1,4 @@
-from utils import logger
+from common.utils import custom_logger
 import ffmpeg
 
 TARGET_SIZE_MB = 50
@@ -7,7 +7,6 @@ TARGET_SIZE_MB = 50
 class VideoFormatter:
     def __init__(self, library):
         self.library = library
-        
         
     def get_shortest_duration(self):
         """
@@ -34,7 +33,7 @@ class VideoFormatter:
         target_size_bytes = TARGET_SIZE_MB * 1024 * 1024  # Convert target size to bytes
 
         for video in self.library:
-            logger.info(f"Processing {video['id']}...")
+            custom_logger(f"Processing {video['id']}...", 'info')
 
             # Calculate total bitrate for target size (video + audio)
             probe = ffmpeg.probe(video["path"])

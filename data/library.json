@@ -1,0 +1,54 @@
+{
+    "files": [
+        {
+            "id": 1,
+            "path": "video1.mp4",
+            "compressed_path": "video1.mp4"
+        },
+        {
+            "id": 2,
+            "path": "video2.mp4",
+            "compressed_path": "video2.mp4"
+        },
+        {
+            "id": 3,
+            "path": "video3.mp4",
+            "compressed_path": "video3.mp4"
+        },
+        {
+            "id": 4,
+            "path": "video4.mp4",
+            "compressed_path": "video4.mp4"
+        },
+        {
+            "id": 5,
+            "path": "video5.mp4",
+            "compressed_path": "video5.mp4"
+        },
+        {
+            "id": 6,
+            "path": "video6.mp4",
+            "compressed_path": "video6.mp4"
+        },
+        {
+            "id": 7,
+            "path": "video7.mp4",
+            "compressed_path": "video7.mp4"
+        },
+        {
+            "id": 8,
+            "path": "video8.mp4",
+            "compressed_path": "video8.mp4"
+        },
+        {
+            "id": 9,
+            "path": "video9.mp4",
+            "compressed_path": "video9.mp4"
+        },
+        {
+            "id": 10,
+            "path": "video10.mp4",
+            "compressed_path": "video10.mp4"
+        }
+    ]
+}

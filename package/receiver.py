@@ -3,19 +3,23 @@ import os
 import socket
 import struct
 import subprocess
-from utils import xor, logger, decode_packet, get_unicast_address
-
+import time
+from package.logger_manager import LoggerManager
+from common.utils import custom_logger, xor, decode_packet, get_unicast_address
+from common.config import SIMULATION_OUTPUT_PATH, UNICAST_PORT
 BUFFER_SIZE = 1024
 SERVER_ADDRESS = ('', 10000)
 
 class MulticastReceiver:
-    def __init__(self, light_id, config_file, cache=None):
+    def __init__(self, sim_id, light_id, config_file, cache=None):
+        self.sim_id = sim_id
+        self.logger_manager = LoggerManager(sim_id)
         self.light_id = light_id
         self.cache = cache
         self.list_of_xor_packets = []
         self.indices = []  # Assuming this is needed for decoding
         self.socks = []  # List of sockets for different multicast groups
-        self.unicast_server_address = (get_unicast_address(config_file), 10001)
+        self.unicast_server_address = (get_unicast_address(config_file), UNICAST_PORT)
 
 
     def set_list_of_xor_packets(self, packets):
@@ -51,7 +55,8 @@ class MulticastReceiver:
                     parts = data.split(b'LAST_PACKET', 1)
                     if parts[0]:
                         cache.append(parts[0])
-                    logger.info("Received LAST_PACKET")
+                    self.logger_manager.update("logs", "Received LAST_PACKET", append=True)
+                    custom_logger("Received LAST_PACKET", level="info")
                     break
                 
                 cache.append(data)
@@ -62,7 +67,7 @@ class MulticastReceiver:
             return decode_packet(joined_bytes)  # Decode bytes to string
         
         except Exception as e:
-            logger.error(f"Unicast server seems down. Exiting: {e}")
+            custom_logger(f"Unicast server seems down. Exiting: {e}", level="error")
             exit()
 
         
@@ -122,10 +127,10 @@ class MulticastReceiver:
             elif os.name == 'nt':  # Windows
                 subprocess.run(['C:\\Program Files\\VideoLAN\\VLC\\vlc.exe', file_path])
             else:
-                logger.error("Unsupported OS for automatically opening VLC.")
+                custom_logger(f"Failed to open VLC", level="error")
         except Exception as e:
-            logger.error(f"Failed to open VLC: {e}")
-            
+            custom_logger(f"Failed to open VLC: {e}", level="error")
+
 
     def start(self, file_id):
         decoded_message = b""
@@ -154,7 +159,7 @@ class MulticastReceiver:
                             chunks[sock].append(data)
                     
                     except socket.timeout:
-                        logger.warning(f"Timeout on socket {sock}, continuing...")
+                        custom_logger(f"Timeout on socket {sock}, continuing...", level="warning")
                         continue
                 
                 if not self.socks:
@@ -188,12 +193,12 @@ class MulticastReceiver:
                 else:
                     decoded_message += self.get_cache()[file_id][tuple(ind)]
 
-            file_path = f"server{self.light_id}-video_{file_id}.mp4"
+            file_path = os.path.join(SIMULATION_OUTPUT_PATH, f"{self.sim_id}-server{self.light_id}-video_{file_id}.mp4")
             self.save_video_file(file_path, decoded_message)
             video_size = os.path.getsize(file_path)
-            logger.success(f"video size : {video_size}")
+            custom_logger(f"video size : {video_size}", level="success")
             # logger.info(f"Successfully decoded and saved as: {file_path}. Opening with VLC...")
             # self.open_video_with_vlc(file_path)
 
             # Log the success message
-            logger.success("Video file has been successfully saved.")
+            custom_logger("Video file has been successfully saved.", level="finished")

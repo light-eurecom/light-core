@@ -1,0 +1,110 @@
+[
+    {
+        "id": 1,
+        "name": "Basic example",
+        "description": "In this example, we're performing a basic multicast flow between two receivers. This simply demonstrates that two receivers, subscribed to a multicast server, receive the same packets.",
+        "action": "http://127.0.0.1:5002/run/use-case-1",
+        "steps": [],
+        "default_setup": {
+            "id": null,
+            "name": "Basic XOR - 2 receivers",
+            "step": 0,
+            "description": "In this example, we're performing a basic multicast flow between two receivers. This simply demonstrates that two receivers, subscribed to a multicast server, receive the same packets.",
+            "edges": [
+                {
+                    "id": "e1-2",
+                    "source": "1",
+                    "target": "2",
+                    "animated": false,
+                    "style": {
+                        "strokeWidth": 3
+                    }
+                },
+                {
+                    "id": "e2-3",
+                    "source": "2",
+                    "target": "3",
+                    "animated": false,
+                    "style": {
+                        "strokeWidth": 3
+                    }
+                },
+                {
+                    "id": "e2-4",
+                    "source": "2",
+                    "target": "4",
+                    "animated": false,
+                    "style": {
+                        "strokeWidth": 3
+                    }
+                }
+            ],
+            "nodes": [
+                {
+                    "id": "1",
+                    "type": "custom",
+                    "data": {
+                        "name": "Main server",
+                        "ip": "127.0.0.1",
+                        "icon": "server",
+                        "message": "Prepares the packet."
+                    },
+                    "position": {
+                        "x": -400,
+                        "y": 150
+                    }
+                },
+                {
+                    "id": "2",
+                    "type": "custom",
+                    "data": {
+                        "name": "Multicast router",
+                        "ip": "224.0.0.1",
+                        "icon": "router",
+                        "message": ""
+                    },
+                    "position": {
+                        "x": -75,
+                        "y": 150
+                    }
+                },
+                {
+                    "id": "3",
+                    "type": "custom",
+                    "data": {
+                        "name": "Receiver 1",
+                        "ip": "127.0.0.2",
+                        "icon": "client",
+                        "cache": [
+                            "why_so_",
+                            "not_so_"
+                        ],
+                        "message": ""
+                    },
+                    "position": {
+                        "x": 330,
+                        "y": 0
+                    }
+                },
+                {
+                    "id": "4",
+                    "type": "custom",
+                    "data": {
+                        "name": "Receiver 2",
+                        "ip": "127.0.0.3",
+                        "icon": "client",
+                        "message": "",
+                        "cache": [
+                            "serious",
+                            "perfect"
+                        ]
+                    },
+                    "position": {
+                        "x": 330,
+                        "y": 310
+                    }
+                }
+            ]
+        }
+    }
+]

@@ -6,15 +6,18 @@ import time
 import threading
 from collections import defaultdict
 from package.multicast_session import MulticastSession
-from utils import encode_packet, split_into_chunks, xor, logger
+from package.logger_manager import LoggerManager
+from common.utils import custom_logger, encode_packet, split_into_chunks, xor
+from common.config import VIDEO_PATH
 
 BUFFER_SIZE = 1024  # 1 MB buffer size
 
 class MulticastServer:
-    def __init__(self, multicast_group, files, receivers, cache_capacity, requested_files, nb_receivers):
+    def __init__(self, sim_id, multicast_group, files, receivers, cache_capacity, requested_files, nb_receivers):
         self.multicast_group = multicast_group
         self.files = files
         self.receivers = receivers
+        self.logger_manager = LoggerManager(sim_id)
         self.session = MulticastSession(library=files, receivers=receivers, cache_capacity=cache_capacity)
         self.indices = self.session.get_chunks_indices()
         self.caches = self.session.get_indices_per_user_cache(self.indices)
@@ -54,11 +57,11 @@ class MulticastServer:
         '''
         splitted = dict()
         for f in self.files:
-            list_of_chunks = self.split_video(f["compressed_path"])
+            list_of_chunks = self.split_video(os.path.join(VIDEO_PATH, f["compressed_path"]))
             if list_of_chunks:  # Check if the splitting was successful
                 splitted[f["id"]] = {ind: list_of_chunks[i] for i, ind in enumerate(self.indices)}
             else:
-                logger.error(f"[Error] Splitting failed for file: {f['compressed_path']}")
+                custom_logger(f"[Error] Splitting failed for file: {f['compressed_path']}", level="error")
         return splitted
 
     def split_video(self, file_path):
@@ -79,7 +82,7 @@ class MulticastServer:
                 return chunks
             
         except Exception as e:
-            logger.error("[Error] Unable to split video:", str(e))
+            custom_logger(f"[Error] Unable to split video:{str(e)}", level="error")
             return None
     def update_cache_with_files(self):
         for user in range(1, self.session.nb_receivers + 1):
@@ -107,7 +110,7 @@ class MulticastServer:
                     else:
                         packet = xor(packet, chunk)
                 except (ValueError, KeyError, TypeError) as e:
-                    logger.error(f"Error processing packet: {e}")
+                    custom_logger(f"Error processing packet: {e}", level="error")
                     continue
             packet_obj["indices"] = xor_packet
             packet_obj["value"] = packet
@@ -125,7 +128,8 @@ class MulticastServer:
                     self.sock.sendto(chunk, self.multicast_group)
                     
             self.sock.sendto(b"LAST_PACKET", self.multicast_group)
-            logger.success(f"Multicast transmission finished for group {self.multicast_group}")
+            self.logger_manager.update("logs", f"Multicast transmission finished for group {self.multicast_group}", append=True)
+            custom_logger(f"Multicast transmission finished for group {self.multicast_group}", level="success")
 
     
     def update_requests(self):
@@ -138,11 +142,13 @@ class MulticastServer:
         if unicast_server:
             while True:
                 if unicast_server.check_connections(self.nb_receivers):
-                    logger.info(f"Starting on {self.multicast_group}")
+                    self.logger_manager.update("logs", f"Starting on {self.multicast_group}", append=True)
+                    custom_logger(f"Starting on {self.multicast_group}", level="info")
                     time.sleep(5)
                     self.send_packets()
                     unicast_server.reset_connections()
                     break
         else:
-            logger.info(f"Starting on {self.multicast_group}")
+            custom_logger(f"Starting on {self.multicast_group}", level="info")
+            self.logger_manager.update("logs", f"Starting on {self.multicast_group}", append=True)
             self.send_packets()
