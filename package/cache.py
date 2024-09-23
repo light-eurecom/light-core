@@ -1,6 +1,6 @@
 import ast
 from collections import defaultdict
-
+from common.utils import custom_logger
 class Cache:
     def __init__(self, filename='cache.txt'):
         self.filename = filename
@@ -18,16 +18,16 @@ class Cache:
                                 default_dict_data[key1][key2] = value
                         return default_dict_data
                     else:
-                        print(f"Error: {self.filename} does not contain a valid dictionary.")
+                        custom_logger(f"Error: {self.filename} does not contain a valid dictionary.", level="error")
                         return defaultdict(dict)
                 else:
-                    print(f"Error: {self.filename} is empty.")
+                    custom_logger(f"Error reading {self.filename}: {e}", level="error")
                     return defaultdict(dict)
         except FileNotFoundError:
-            print(f"Error: {self.filename} not found.")
+            custom_logger(f"Error: {self.filename} not found.", level="error")
             return defaultdict(dict)
         except Exception as e:
-            print(f"Error reading {self.filename}: {e}")
+            custom_logger(f"Error reading {self.filename}: {e}", level="error")
             return defaultdict(dict)
 
     def set_content(self, content):

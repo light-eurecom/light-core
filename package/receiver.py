@@ -1,19 +1,25 @@
 import json
+import os
 import socket
 import struct
-from utils import xor, logger, decode_packet, get_unicast_address
-
-BUFFER_SIZE = 2048
+import subprocess
+import time
+from package.logger_manager import LoggerManager
+from common.utils import custom_logger, xor, decode_packet, get_unicast_address
+from common.config import SIMULATION_OUTPUT_PATH, UNICAST_PORT
+BUFFER_SIZE = 1024
 SERVER_ADDRESS = ('', 10000)
 
 class MulticastReceiver:
-    def __init__(self, light_id, config_file, cache=None):
+    def __init__(self, sim_id, light_id, config_file, cache=None):
+        self.sim_id = sim_id
+        self.logger_manager = LoggerManager(sim_id)
         self.light_id = light_id
         self.cache = cache
         self.list_of_xor_packets = []
         self.indices = []  # Assuming this is needed for decoding
         self.socks = []  # List of sockets for different multicast groups
-        self.unicast_server_address = (get_unicast_address(config_file), 10001)
+        self.unicast_server_address = (get_unicast_address(config_file), UNICAST_PORT)
 
 
     def set_list_of_xor_packets(self, packets):
@@ -49,7 +55,8 @@ class MulticastReceiver:
                     parts = data.split(b'LAST_PACKET', 1)
                     if parts[0]:
                         cache.append(parts[0])
-                    logger.info("Received LAST_PACKET")
+                    self.logger_manager.update("logs", "Received LAST_PACKET", append=True)
+                    custom_logger("Received LAST_PACKET", level="info")
                     break
                 
                 cache.append(data)
@@ -60,7 +67,7 @@ class MulticastReceiver:
             return decode_packet(joined_bytes)  # Decode bytes to string
         
         except Exception as e:
-            logger.error(f"Unicast server seems down. Exiting: {e}")
+            custom_logger(f"Unicast server seems down. Exiting: {e}", level="error")
             exit()
 
         
@@ -108,7 +115,22 @@ class MulticastReceiver:
         sock.setsockopt(socket.IPPROTO_IP, socket.IP_ADD_MEMBERSHIP, mreq)
         self.socks.append(sock)
 
-        
+    def open_video_with_vlc(self, file_path):
+        """Open the video file with VLC media player."""
+        try:
+            # Adjust the command based on your OS
+            if os.name == 'posix':  # Unix-like (Linux, macOS)
+                try:
+                    subprocess.run(['vlc', file_path])
+                except Exception as e:
+                   subprocess.run(['/Applications/VLC.app/Contents/MacOS/VLC', file_path]) 
+            elif os.name == 'nt':  # Windows
+                subprocess.run(['C:\\Program Files\\VideoLAN\\VLC\\vlc.exe', file_path])
+            else:
+                custom_logger(f"Failed to open VLC", level="error")
+        except Exception as e:
+            custom_logger(f"Failed to open VLC: {e}", level="error")
+
 
     def start(self, file_id):
         decoded_message = b""
@@ -137,7 +159,7 @@ class MulticastReceiver:
                             chunks[sock].append(data)
                     
                     except socket.timeout:
-                        logger.warning(f"Timeout on socket {sock}, continuing...")
+                        custom_logger(f"Timeout on socket {sock}, continuing...", level="warning")
                         continue
                 
                 if not self.socks:
@@ -146,6 +168,7 @@ class MulticastReceiver:
             # Process the packets as before...
             list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
             transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
+            
             indices = received_packets[0]["all_indices"]
             decoded_chunks = {}
             current_fileID = None
@@ -170,4 +193,12 @@ class MulticastReceiver:
                 else:
                     decoded_message += self.get_cache()[file_id][tuple(ind)]
 
-            logger.success(decoded_message)
+            file_path = os.path.join(SIMULATION_OUTPUT_PATH, f"{self.sim_id}-server{self.light_id}-video_{file_id}.mp4")
+            self.save_video_file(file_path, decoded_message)
+            video_size = os.path.getsize(file_path)
+            custom_logger(f"video size : {video_size}", level="success")
+            # logger.info(f"Successfully decoded and saved as: {file_path}. Opening with VLC...")
+            # self.open_video_with_vlc(file_path)
+
+            # Log the success message
+            custom_logger("Video file has been successfully saved.", level="finished")

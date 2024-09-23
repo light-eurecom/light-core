@@ -1,1 +1,5 @@
 loguru
+Flask
+werkzeug
+flask_cors
+ffmpeg
