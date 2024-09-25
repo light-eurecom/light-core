@@ -121,15 +121,17 @@ Here's the updated explanation, including the missing step:
 
 So, the server goes through a process of waiting for requests, preparing caches, creating special multicast packets, and then sending everything needed for the receivers to assemble the video content.
 
+## What we've tried
 
-- describe the files/repos in git (configs...)
-"""
-main fonct of receiver : 
-- receiver requests...
-- store in memo...
-...
-"""
+Testing this multicast server setup across different network environments—ranging from a local machine network, to a home LAN, to an enterprise-scale LAN at the Eurecom lab—likely yielded varied results based on the complexity and capacity of each network.
 
-describe the experiments(same machine, same lan...) + what we tried 
+### 1. **Local Machine Network**
+This test involved running both the multicast server and receivers on the same machine, possibly simulating a simple local loopback scenario. The advantage here is that there are no external network factors like latency, packet loss, or routing issues. Everything is contained and controlled. The performance was probably excellent, with near-instant responses and smooth multicasting, given the absence of real network traffic. However, this setup doesn’t represent a real-world scenario, so it might not fully test the system’s robustness under actual network conditions.
 
-8:30 thrusday Pavlos
+### 2. **Local Home LAN**
+Moving to a home LAN, with devices connected via a home router, introduces more realistic network conditions. A typical home LAN has moderate traffic, some interference, and less efficient routing than an enterprise-level network. You likely experienced a few minor issues, such as slight delays or packet losses, depending on the network quality and the number of devices using the router at the time. However, since home routers are generally built for reliable communication between devices, the multicast packets were probably transmitted efficiently most of the time, with occasional hiccups.
+
+### 3. **Enterprise-Scale LAN (Eurecom Lab)**
+The enterprise-scale LAN, such as the one in Eurecom’s lab, likely presented the most challenging environment for the multicast setup. These networks are designed for large-scale communication, with complex routing protocols, higher traffic loads, and sophisticated network management systems. Depending on the lab's specific network setup, you might have encountered challenges like network congestion, stricter security policies, or packet drops due to the sheer scale of communication happening simultaneously. While the multicast system may have worked, you likely faced some technical hurdles around packet handling and network tuning to optimize performance for such a large environment. Multicasting over this type of LAN can expose bottlenecks or inefficiencies in packet transmission that aren’t visible in smaller, simpler networks.
+
+In summary, testing in each environment likely highlighted different strengths and weaknesses of your system. The local machine network was probably smooth but unrealistic, the home LAN introduced manageable real-world challenges, and the enterprise LAN revealed areas where further optimization might be needed.
