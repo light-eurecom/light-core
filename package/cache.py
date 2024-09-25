@@ -1,9 +1,11 @@
 import ast
 from collections import defaultdict
+import os
 from common.utils import custom_logger
+from common.config import CACHE_PATH
 class Cache:
     def __init__(self, filename='cache.txt'):
-        self.filename = filename
+        self.filename = os.path.join(CACHE_PATH, filename)
 
     def get_content(self):
         try:
