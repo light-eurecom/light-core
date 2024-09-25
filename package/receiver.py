@@ -143,9 +143,9 @@ class MulticastReceiver:
             chunks = {sock: [] for sock in self.socks}
             
             while True:
-                for sock in list(self.socks):  # Iterate over a copy of the list
+                for sock in list(self.socks):
                     try:
-                        sock.settimeout(5)  # Set timeout to prevent blocking indefinitely
+                        sock.settimeout(5)
                         data, _ = sock.recvfrom(1024)
                         
                         if data == b"END_OF_CHUNK":
@@ -153,7 +153,7 @@ class MulticastReceiver:
                             chunks[sock] = []
                         elif data == b"LAST_PACKET":
                             self.socks.remove(sock)
-                            sock.close()  # Close the socket after removing it
+                            sock.close() 
                             break
                         else:
                             chunks[sock].append(data)
@@ -165,7 +165,6 @@ class MulticastReceiver:
                 if not self.socks:
                     break
 
-            # Process the packets as before...
             list_of_xor_packets = self.get_list_of_xor_packets(received_packets)
             transmitted_packets = self.get_list_of_transmitted_packets(received_packets)
             
