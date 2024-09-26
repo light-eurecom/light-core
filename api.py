@@ -19,7 +19,7 @@ app.secret_key = os.getenv('FLASK_SECRET_KEY')
 print("Allowed origins:", os.getenv('LIGHT_HOST'))
 
 # Configure CORS for all routes
-CORS(app, resources={r"/*": {"origins": os.getenv('LIGHT_HOST')}})
+CORS(app)
 
 
 # Dictionary to track running simulation processes
