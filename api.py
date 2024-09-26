@@ -112,14 +112,17 @@ def create_simulation():
     simulation_id = create_simulation_schema(nb_receivers, nb_routers)
 
     # Commands to start server and client
-    commands_server = ["python3", "server.py", "1", "-c", "server.ini", "-sim_id", simulation_id]
+    commands_server = ["python3", "server.py", "2", "-c", "server.ini", "-sim_id", simulation_id]
     commands_client = ["python3", "receiver.py", "1", "-rq", "2", "-c", "receiver.ini", "-sim_id", simulation_id]
+    commands_client2 = ["python3", "receiver.py", "2", "-rq", "5", "-c", "receiver.ini", "-sim_id", simulation_id]
 
     # Start the server and client processes in the background
     start_process_in_background(commands_server, simulation_id)
     time.sleep(2)
     start_process_in_background(commands_client, simulation_id)
     time.sleep(1)
+    start_process_in_background(commands_client2, simulation_id)
+
 
     return jsonify({"simulation_id": simulation_id}), 201
 

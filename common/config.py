@@ -6,7 +6,7 @@ SIMULATION_OUTPUT_PATH = os.getenv('OUTPUT_PATH', os.path.expanduser("~/var/ligh
 CACHE_PATH = os.getenv('OUTPUT_PATH', os.path.expanduser("~/var/tmp/light_eurecom/cache"))
 DATA_PATH = os.path.join(BASE_DIR, 'data')
 VIDEO_PATH = os.path.join(DATA_PATH, "raw_videos")
-UNICAST_PORT = 3224
+UNICAST_PORT = 22222
 
 if not os.path.exists(SIMULATION_OUTPUT_PATH):
     os.makedirs(SIMULATION_OUTPUT_PATH, exist_ok=True)
