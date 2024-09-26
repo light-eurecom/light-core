@@ -3,7 +3,6 @@ import os
 import socket
 import struct
 import subprocess
-import time
 from package.logger_manager import LoggerManager
 from common.utils import custom_logger, xor, decode_packet, get_unicast_address
 from common.config import SIMULATION_OUTPUT_PATH, UNICAST_PORT

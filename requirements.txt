@@ -3,3 +3,5 @@ Flask
 werkzeug
 flask_cors
 ffmpeg
+gevent
+python-dotenv

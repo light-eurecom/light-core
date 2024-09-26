@@ -3,7 +3,6 @@
         "id": 1,
         "name": "Basic example",
         "description": "In this example, we're performing a basic multicast flow between two receivers. This simply demonstrates that two receivers, subscribed to a multicast server, receive the same packets.",
-        "action": "http://127.0.0.1:5002/run/use-case-1",
         "steps": [],
         "default_setup": {
             "id": null,

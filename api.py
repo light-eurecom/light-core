@@ -2,15 +2,25 @@ import json
 import os
 import threading
 import time
+from gevent.pywsgi import WSGIServer
 from flask import Flask, jsonify, request
 import subprocess
 from flask_cors import CORS
 from werkzeug.exceptions import BadRequest
 from common.utils import create_simulation_schema
 from package.logger_manager import LoggerManager
+from dotenv import load_dotenv
 from common.config import SIMULATION_OUTPUT_PATH
+
+load_dotenv('.env.development')
 app = Flask(__name__)
-CORS(app)
+app.secret_key = os.getenv('FLASK_SECRET_KEY')
+
+print("Allowed origins:", os.getenv('LIGHT_HOST'))
+
+# Configure CORS for all routes
+CORS(app, resources={r"/*": {"origins": os.getenv('LIGHT_HOST')}})
+
 
 # Dictionary to track running simulation processes
 simulation_processes = {}
@@ -156,4 +166,5 @@ def ping():
     return jsonify({'message': 'Server is running', "status":"ok"}), 200
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5002)
+    http_server = WSGIServer(('', 5002), app)
+    http_server.serve_forever()

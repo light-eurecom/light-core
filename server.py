@@ -11,7 +11,6 @@ def main(args):
         config = read_config(args.config)
         multicast_groups = config['MULTICAST_GROUPS']
         library_file = config['LIBRARY_FILE']
-        print(library_file)
         with open(library_file, 'r') as file:
             library = json.load(file)
             files = library['files']
